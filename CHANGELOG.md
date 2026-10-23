@@ -4,6 +4,42 @@ Semua perubahan penting pada proyek ini dicatat di berkas ini.
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/),
 dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 
+## [0.2.0] — 2026-10-23
+
+### Ditambahkan
+
+- **Pengaturan resolusi, fps, dan bitrate** pada halaman loop video. Hasilnya bisa dibuat
+  lebih kecil untuk menghemat ruang, atau lebih besar untuk kualitas. Lebar mengikuti rasio
+  aspek sumber sehingga gambar tidak pernah gepeng. Perkiraan ukuran berkas ditampilkan
+  sebelum render dijalankan.
+- **Penghitung waktu berjalan** di halaman loop video dan gabung lagu. Angkanya dihitung
+  dari selisih waktu nyata, jadi tetap benar setelah jendela tidak aktif.
+- **Notifikasi pembaruan** di dalam aplikasi. Saat dibuka, LofiLoop memeriksa rilis terbaru
+  di GitHub dan menampilkan tawaran unduh kalau ada versi yang lebih baru. Pemasangan tetap
+  dilakukan pengguna; aplikasi tidak menimpa dirinya sendiri.
+- Laporan hasil kini menyertakan resolusi dan fps berkas keluaran, dibaca ulang dari berkasnya.
+- Opsi `--height` dan `--fps` pada CLI.
+
+### Diperbaiki
+
+- **Jendela konsol tidak lagi muncul** saat memproses. Aplikasi meluncurkan `ffmpeg`,
+  `ffprobe`, dan `powershell` sebagai proses anak; di aplikasi tanpa konsol, Windows membuat
+  jendela baru untuk masing-masingnya. Proses sekarang diluncurkan dengan penanda
+  `CREATE_NO_WINDOW`, dan keluarannya tetap terbaca seperti sebelumnya.
+
+### Diubah
+
+- Komentar di seluruh kode ditulis ulang agar tenang dan menjelaskan alasan, bukan mencatat
+  kejadian.
+
+### Catatan
+
+- Resolusi dan fps hanya mengubah bentuk keluaran. Keduanya dipasang sebagai filter sebelum
+  pemotongan frame, dan angka fps yang sama dipakai untuk menghitung nomor frame serta opsi
+  `-r`; kalau keduanya berbeda, panjang unit loop menjadi tidak sesuai rencana.
+
+[0.2.0]: https://github.com/samuelindra123/lofiloop/releases/tag/v0.2.0
+
 ## [0.1.1] — 2026-10-23
 
 ### Diperbaiki

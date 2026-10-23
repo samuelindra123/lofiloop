@@ -133,7 +133,7 @@ where
         url = url,
         out = dest.display()
     );
-    let child = std::process::Command::new("powershell")
+    let child = crate::proc::command_str("powershell")
         .args(["-NoProfile", "-NonInteractive", "-Command", &script])
         .spawn()
         .map_err(|e| Error::Invalid(format!("gagal menjalankan pengunduh: {e}")))?;
@@ -184,7 +184,7 @@ fn fetch_text(url: &str) -> Result<String> {
          (Invoke-WebRequest -UseBasicParsing -Uri '{url}').Content",
         url = url
     );
-    let out = std::process::Command::new("powershell")
+    let out = crate::proc::command_str("powershell")
         .args(["-NoProfile", "-NonInteractive", "-Command", &script])
         .output()
         .map_err(|e| Error::Invalid(format!("gagal mengambil {url}: {e}")))?;
@@ -197,7 +197,7 @@ fn fetch_text(url: &str) -> Result<String> {
 fn sha256_file(path: &Path) -> Result<String> {
     // Get-FileHash tersedia di semua Windows modern.
     let script = format!("(Get-FileHash -Algorithm SHA256 '{}').Hash", path.display());
-    let out = std::process::Command::new("powershell")
+    let out = crate::proc::command_str("powershell")
         .args(["-NoProfile", "-NonInteractive", "-Command", &script])
         .output()
         .map_err(|e| Error::Invalid(format!("gagal menghitung hash: {e}")))?;
@@ -216,7 +216,7 @@ fn extract_zip(zip: &Path, dest: &Path) -> Result<()> {
         zip.display(),
         dest.display()
     );
-    let status = std::process::Command::new("powershell")
+    let status = crate::proc::command_str("powershell")
         .args(["-NoProfile", "-NonInteractive", "-Command", &script])
         .status()
         .map_err(|e| Error::Invalid(format!("gagal mengekstrak: {e}")))?;
@@ -254,7 +254,7 @@ fn find_ffmpeg_dir(root: &Path) -> Option<PathBuf> {
 
 fn read_version(dir: &Path) -> Option<String> {
     let exe = dir.join(exe_name("ffmpeg"));
-    let out = std::process::Command::new(exe)
+    let out = crate::proc::command(Path::new(exe))
         .arg("-version")
         .output()
         .ok()?;

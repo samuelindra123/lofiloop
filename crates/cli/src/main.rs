@@ -41,6 +41,9 @@ Kualitas:
   --encoder <mode>        quality (default, libx264, sambungan paling halus)
                           | hardware (h264_qsv, lebih cepat tapi sambungan lebih kasar)
   --bitrate <nilai>       bitrate video (default 4M)
+  --height <piksel>       tinggi hasil, lebar mengikuti rasio aspek sumber (mis. 720, 1080).
+                          Semakin kecil, semakin hemat ruang. Kosong = ikut sumber.
+  --fps <angka>           frame per detik hasil (mis. 24, 30). Kosong = ikut sumber.
   --audio-bitrate <nilai> bitrate audio (default 192k)
 
 Lain-lain:
@@ -243,6 +246,20 @@ fn run() -> std::result::Result<(), String> {
             }
             "--bitrate" => opts.bitrate_video = value(i)?,
             "--audio-bitrate" => opts.bitrate_audio = value(i)?,
+            "--height" => {
+                let h = parse_num(&value(i)?, "--height")?;
+                if h < 16.0 || h > 4320.0 {
+                    return Err("--height di luar rentang wajar (16 sampai 4320)".into());
+                }
+                opts.target.height = Some(h as u32);
+            }
+            "--fps" => {
+                let f = parse_num(&value(i)?, "--fps")?;
+                if f < 1.0 || f > 240.0 {
+                    return Err("--fps di luar rentang wajar (1 sampai 240)".into());
+                }
+                opts.target.fps = Some(f);
+            }
             "--work" => work_dir = Some(value(i)?),
             other => return Err(format!("opsi '{other}' tidak dikenal. Pakai --help.")),
         }
@@ -299,6 +316,10 @@ fn run() -> std::result::Result<(), String> {
             report.audio_repeats.unwrap_or(0)
         );
     }
+    println!(
+        "bentuk keluaran : {}x{} pada {:.3} fps",
+        report.output_width, report.output_height, report.output_fps
+    );
     println!("kebijakan audio : {}", report.policy_note);
     println!("waktu proses    : {:.1} dtk", report.elapsed_s);
     if ctx.work_dir().exists() {

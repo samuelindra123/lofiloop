@@ -665,8 +665,8 @@ mod tests {
 
     #[test]
     fn staged_total_matches_direct_total() {
-        // Hasil bertahap harus sama panjang dengan sekali jalan, inilah yang pernah salah
-        // karena batas -t dibagi rata padahal lagunya tidak sama panjang.
+        // Panjang hasil bertahap harus sama dengan penggabungan sekali jalan. Batas `-t`
+        // tidak boleh dibagi rata antar kelompok, karena panjang tiap lagu tidak sama.
         let d = [
             50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0, 95.0, 100.0, 105.0,
         ];

@@ -7,6 +7,7 @@ pub mod ffmpeg;
 pub mod machine;
 pub mod merge;
 pub mod probe;
+pub mod proc;
 pub mod render;
 pub mod run;
 pub mod setup;

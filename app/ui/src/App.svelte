@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { invoke, listen, inTauri, pickFile } from "./bridge.js";
+  import { buatTimer, fmtHMS } from "./timer.js";
   import MergePage from "./MergePage.svelte";
 
   // ---------- keadaan ----------
@@ -19,9 +20,15 @@
   let fadeOutS = $state(3);
   let policy = $state("replace");
   let encoder = $state("quality");
+  // 0 berarti mengikuti berkas sumber apa adanya.
+  let targetHeight = $state(0);
+  let targetFps = $state(0);
+  let bitrateVideo = $state("4M");
 
   let busy = $state(false);
   let progress = $state({ text: "", fraction: null });
+  let detik = $state(0);
+  const timer = buatTimer((s) => (detik = s));
   let log = $state([]);
   let report = $state(null);
   let banner = $state(null);
@@ -31,12 +38,92 @@
   let setupSteps = $state([]);
   let setupNote = $state(null);
 
+  // ---------- pembaruan ----------
+  let infoUpdate = $state(null);
+  let updateDitolak = $state(false);
+
+  /**
+   * Periksa versi terbaru, lalu simpan hasilnya untuk ditampilkan.
+   *
+   * Tujuan `updateDitolak` adalah menghormati pilihan pengguna: begitu notifikasi ditutup,
+   * ia tidak muncul lagi sampai aplikasi dibuka ulang. Kesalahan jaringan sengaja tidak
+   * ditampilkan sama sekali, karena gagal menghubungi GitHub bukan masalah bagi pengguna
+   * yang tidak sedang membutuhkan pembaruan.
+   */
+  async function periksaPembaruan() {
+    try {
+      const info = await invoke("check_update");
+      if (info?.tersedia) infoUpdate = info;
+    } catch {
+      // Tidak ada yang perlu dilakukan.
+    }
+  }
+
+  async function bukaPembaruan() {
+    const alamat = infoUpdate?.halaman;
+    if (!alamat) return;
+    try {
+      await invoke("open_url", { url: alamat });
+    } catch (err) {
+      banner = { kind: "err", text: `Tidak bisa membuka peramban: ${err}` };
+    }
+  }
+
   const DURATIONS = [
     { label: "30 menit", value: 30 },
     { label: "1 jam", value: 60 },
     { label: "3 jam", value: 180 },
   ];
 
+  // Pilihan tinggi keluaran. Lebar mengikuti rasio aspek sumber, jadi yang ditawarkan
+  // hanya tingginya. Ukuran berkas mengikuti tinggi dan bitrate, bukan fps saja.
+  const RESOLUSI = [
+    { label: "Ikut sumber", value: 0 },
+    { label: "360p", value: 360 },
+    { label: "480p", value: 480 },
+    { label: "720p", value: 720 },
+    { label: "1080p", value: 1080 },
+  ];
+
+  const FPS = [
+    { label: "Ikut sumber", value: 0 },
+    { label: "24", value: 24 },
+    { label: "25", value: 25 },
+    { label: "30", value: 30 },
+    { label: "60", value: 60 },
+  ];
+
+  const BITRATE = [
+    { label: "1,5M — paling hemat", value: "1.5M" },
+    { label: "3M — hemat", value: "3M" },
+    { label: "4M — seimbang", value: "4M" },
+    { label: "8M — kualitas tinggi", value: "8M" },
+    { label: "16M — maksimal", value: "16M" },
+  ];
+
+
+  // Ringkasan hasil: ukuran keluaran dan perkiraan besar berkas.
+  //
+  // Perkiraan dihitung dari bitrate dikali durasi, bukan pengukuran. Angka ini untuk
+  // memberi gambaran sebelum menekan tombol, bukan janji. Hasil sebenarnya bisa berbeda
+  // karena isi gambar memengaruhi berapa bitrate yang benar-benar terpakai.
+  let bentukHasil = $derived.by(() => {
+    const v = meta.video;
+    if (!v || !v.width || !v.height) return null;
+    const tinggi = targetHeight || v.height;
+    const lebar = Math.round((v.width / v.height) * tinggi / 2) * 2;
+    const fps = targetFps || v.fps;
+    const mbps = Number.parseFloat(bitrateVideo) * 1_000_000;
+    const bytes = (mbps / 8) * (durationMin * 60);
+    const rasio = tinggi / v.height;
+    return {
+      teks: `${lebar}×${tinggi} · ${fps.toFixed(2)} fps · ±${fmtBytes(bytes)}`,
+      catatan:
+        tinggi === v.height && Math.abs(fps - v.fps) < 0.01
+          ? `Sama dengan sumber (${v.width}×${v.height}, ${v.fps.toFixed(2)} fps).`
+          : `Diskalakan ${(rasio * 100).toFixed(0)}% dari sumber; berkas ${rasio < 1 ? "lebih kecil" : "lebih besar"} dari aslinya.`,
+    };
+  });
 
   // Ringkasan apa yang akan dilakukan pada audio, dihitung dari panjang lagu dan durasi target.
   let audioPlan = $derived.by(() => {
@@ -92,10 +179,15 @@
       xfadeS = config.video_xfade_s ?? 2;
       policy = config.policy ?? "replace";
       encoder = config.encoder ?? "quality";
+      bitrateVideo = config.bitrate_video ?? "4M";
 
       const report = await refreshMachine();
       view = report.ready && config.onboarded ? "main" : "setup";
       if (view === "setup") buildSetupSteps(report);
+
+      // Pemeriksaan pembaruan dijalankan tanpa ditunggu. Kalau jaringan lambat atau tidak
+      // ada, aplikasi tetap terbuka dan bisa dipakai; notifikasinya muncul kalau hasilnya ada.
+      periksaPembaruan();
     } catch (err) {
       view = "setup";
       setupNote = { kind: "err", text: String(err) };
@@ -228,6 +320,7 @@
     banner = null;
     log = [];
     progress = { text: "menyiapkan…", fraction: 0 };
+    timer.mulai();
 
     try {
       const { save } = await import("@tauri-apps/plugin-dialog");
@@ -238,6 +331,7 @@
       });
       if (!output) {
         busy = false;
+        timer.henti();
         return;
       }
 
@@ -252,10 +346,14 @@
         audio_xfade_s: 2.0,
         policy,
         encoder,
-        bitrate_video: config?.bitrate_video ?? "4M",
+        bitrate_video: bitrateVideo,
         bitrate_audio: "192k",
         target_lufs: config?.target_lufs ?? -14.0,
         silence_dbfs: -50.0,
+        target: {
+          height: targetHeight || null,
+          fps: targetFps || null,
+        },
       };
 
       pushLog(`target: ${output}`);
@@ -272,6 +370,7 @@
           video_xfade_s: xfadeS,
           policy,
           encoder,
+          bitrate_video: bitrateVideo,
         },
       });
     } catch (err) {
@@ -279,6 +378,7 @@
       pushLog(String(err), "err");
     } finally {
       busy = false;
+      timer.henti();
     }
   }
 
@@ -344,6 +444,22 @@
   </header>
 
   <div class="body">
+    {#if view === "main" && infoUpdate && !updateDitolak}
+      <div class="note update" style="max-width:1180px;margin:0 auto 18px">
+        <div class="update-text">
+          <strong>Versi {infoUpdate.latest.replace(/^v/, "")} sudah tersedia.</strong>
+          <span>
+            Kamu memakai {infoUpdate.current}. Unduh, lalu pasang seperti biasa — pengaturan
+            dan berkasmu tidak terpengaruh.
+          </span>
+        </div>
+        <div class="update-aksi">
+          <button class="btn primary" onclick={bukaPembaruan}>Buka unduhan</button>
+          <button class="btn" onclick={() => (updateDitolak = true)}>Nanti</button>
+        </div>
+      </div>
+    {/if}
+
     {#if view === "loading"}
       <div class="setup">
         <div class="card">
@@ -565,6 +681,58 @@
               <option value="hardware">h264_qsv — lebih cepat, sambungan lebih kasar</option>
             </select>
           </div>
+
+          <div class="field">
+            <div class="head">
+              <label for="resolusi">Resolusi</label>
+              {#if targetHeight === 0 && meta.video}
+                <span class="readout">{meta.video.width}×{meta.video.height}</span>
+              {/if}
+            </div>
+            <div class="segments">
+              {#each RESOLUSI as r}
+                <button
+                  class="seg {targetHeight === r.value ? 'active' : ''}"
+                  onclick={() => (targetHeight = r.value)}
+                  disabled={busy}
+                >{r.label}</button>
+              {/each}
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="head">
+              <label for="fps">Frame per detik</label>
+              {#if targetFps === 0 && meta.video}
+                <span class="readout">{meta.video.fps.toFixed(2)}</span>
+              {/if}
+            </div>
+            <div class="segments">
+              {#each FPS as f}
+                <button
+                  class="seg {targetFps === f.value ? 'active' : ''}"
+                  onclick={() => (targetFps = f.value)}
+                  disabled={busy}
+                >{f.label}</button>
+              {/each}
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="head"><label for="bitrate">Bitrate video</label></div>
+            <select id="bitrate" bind:value={bitrateVideo} disabled={busy}>
+              {#each BITRATE as b}
+                <option value={b.value}>{b.label}</option>
+              {/each}
+            </select>
+          </div>
+
+          {#if bentukHasil}
+            <div class="note" style="margin-bottom:16px">
+              <div><strong>{bentukHasil.teks}</strong></div>
+              <div style="margin-top:4px;opacity:.8">{bentukHasil.catatan}</div>
+            </div>
+          {/if}
         </div>
 
         <div class="card wide">
@@ -583,9 +751,14 @@
               </div>
               <div class="caption">
                 <span>{progress.text}</span>
-                {#if machine?.encode_speed_realtime && busy}
-                  <span>perkiraan sisa {fmtClock((durationMin * 60) / machine.encode_speed_realtime * 0.25)}</span>
-                {/if}
+                <span class="durasi">
+                  {#if busy}
+                    <span class="timer" title="Waktu berjalan sejak render dimulai">{fmtHMS(detik)}</span>
+                  {/if}
+                  {#if machine?.encode_speed_realtime && busy}
+                    <span>perkiraan sisa {fmtClock((durationMin * 60) / machine.encode_speed_realtime * 0.25)}</span>
+                  {/if}
+                </span>
               </div>
             </div>
           {/if}
@@ -598,6 +771,10 @@
                 <div class="row">
                   <span class="k">Durasi video</span>
                   <span class="v">{report.duration_video_s.toFixed(3)} dtk ({report.video_repeats}× loop)</span>
+                </div>
+                <div class="row">
+                  <span class="k">Bentuk keluaran</span>
+                  <span class="v">{report.output_width}×{report.output_height} · {report.output_fps.toFixed(2)} fps</span>
                 </div>
                 {#if report.duration_audio_s}
                   <div class="row">

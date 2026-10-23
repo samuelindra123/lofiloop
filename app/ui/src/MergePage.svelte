@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { invoke, listen, pickFiles } from "./bridge.js";
+  import { buatTimer, fmtHMS } from "./timer.js";
 
   let { onBusyChange } = $props();
 
@@ -17,6 +18,8 @@
   let choosingFolder = $state(false);
   let lastMessageAt = $state(0);
   let nowTick = $state(Date.now());
+  let detik = $state(0);
+  const timer = buatTimer((s) => (detik = s));
 
   // Penunjuk waktu: memastikan layar tidak pernah diam tanpa keterangan walau pesan
   // dari backend tersendat. Ini jaring pengaman, bukan pengganti laporan sebenarnya.
@@ -233,6 +236,7 @@
 
     busy = true;
     onBusyChange?.(true);
+    timer.mulai();
     try {
       const result = await invoke("merge_songs", {
         opts: {
@@ -254,6 +258,7 @@
       pushLog(String(err), "err");
     } finally {
       busy = false;
+      timer.henti();
       onBusyChange?.(false);
     }
   }
@@ -401,9 +406,14 @@
         </div>
         <div class="caption">
           <span>{progress.text || "menyiapkan…"}</span>
-          {#if progress.fraction != null}
-            <span>{Math.round(progress.fraction * 100)}%</span>
-          {/if}
+          <span class="durasi">
+            {#if busy}
+              <span class="timer" title="Waktu berjalan sejak penggabungan dimulai">{fmtHMS(detik)}</span>
+            {/if}
+            {#if progress.fraction != null}
+              <span>{Math.round(progress.fraction * 100)}%</span>
+            {/if}
+          </span>
         </div>
         {#if busy && detikSejakPesan >= 3}
           <!-- Jaring pengaman: kalau pesan dari backend tersendat, layar tetap memberi

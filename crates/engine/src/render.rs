@@ -13,18 +13,18 @@ use crate::error::{Error, Result};
 use crate::ffmpeg::{Ffmpeg, VideoEncoder};
 use crate::probe::{self, MediaInfo};
 use crate::run::Ctx;
-use crate::video::{self, VideoUnit};
+use crate::video::{self, TargetVideo, VideoUnit};
 
 /// Apa yang dilakukan pada audio asli video.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum AudioPolicy {
-    /// Buang suara video, pakai audio user. Perilaku default.
+    /// Buang suara video, pakai audio pengguna. Perilaku default.
     #[default]
     Replace,
-    /// Pertahankan suara video, abaikan audio user.
+    /// Pertahankan suara video, abaikan audio pengguna.
     Keep,
-    /// Campur keduanya: audio user diturunkan saat suara video terdengar.
+    /// Campur keduanya: audio pengguna diturunkan saat suara video terdengar.
     Duck,
 }
 
@@ -60,10 +60,13 @@ pub struct RenderOptions {
     pub encoder: EncoderChoice,
     pub bitrate_video: String,
     pub bitrate_audio: String,
-    /// Normalisasi loudness audio user ke LUFS ini. `None` = jangan sentuh.
+    /// Normalisasi loudness audio pengguna ke LUFS ini. `None` = jangan sentuh.
     pub target_lufs: Option<f64>,
     /// Ambang dBFS di bawah mana audio video dianggap senyap.
     pub silence_dbfs: f64,
+    /// Skala dan fps keluaran. Kosong berarti mengikuti sumber.
+    #[serde(default)]
+    pub target: TargetVideo,
 }
 
 impl Default for RenderOptions {
@@ -83,6 +86,7 @@ impl Default for RenderOptions {
             bitrate_audio: "192k".into(),
             target_lufs: Some(-14.0),
             silence_dbfs: -50.0,
+            target: TargetVideo::asal(),
         }
     }
 }
@@ -104,6 +108,10 @@ pub struct RenderReport {
     pub policy: AudioPolicy,
     pub policy_note: String,
     pub elapsed_s: f64,
+    /// Resolusi dan fps berkas hasil, dibaca ulang dari berkasnya.
+    pub output_width: u32,
+    pub output_height: u32,
+    pub output_fps: f64,
 }
 
 /// Jalankan seluruh pipeline.
@@ -182,7 +190,7 @@ pub fn render(ctx: &Ctx, opts: &RenderOptions, ffmpeg_dir: Option<&str>) -> Resu
         None => None,
     };
 
-    // Kalau audio user tidak ada, suara video dipertahankan apa pun kebijakannya.
+    // Kalau audio pengguna tidak ada, suara video dipertahankan apa pun kebijakannya.
     let (policy, policy_note) = if audio_info.is_none() {
         if video_info.has_audio {
             (
@@ -229,6 +237,7 @@ pub fn render(ctx: &Ctx, opts: &RenderOptions, ffmpeg_dir: Option<&str>) -> Resu
         opts.video_xfade_s,
         encoder,
         &opts.bitrate_video,
+        opts.target,
     )?;
     let repeats = repeat_count(opts.duration_s, unit.duration_s);
     ctx.step(&format!(
@@ -344,6 +353,9 @@ pub fn render(ctx: &Ctx, opts: &RenderOptions, ffmpeg_dir: Option<&str>) -> Resu
         policy,
         policy_note,
         elapsed_s: started.elapsed().as_secs_f64(),
+        output_width: out_info.width,
+        output_height: out_info.height,
+        output_fps: out_info.fps,
     })
 }
 
@@ -430,7 +442,7 @@ fn mux(
             ]);
         }
         _ => {
-            // Keep, atau tidak ada audio user, atau video memang bisu.
+            // Keep, atau tidak ada audio pengguna, atau video memang bisu.
             if video_info.has_audio {
                 ctx.step("mempertahankan suara asli video");
                 args.extend([

@@ -1,6 +1,6 @@
 //! Pemeriksaan kesiapan mesin: ffmpeg, encoder, dan dukungan GPU.
 //!
-//! Hasilnya dipakai wizard penyiapan di UI untuk memberi tahu user apa yang kurang
+//! Hasilnya dipakai wizard penyiapan di UI untuk memberi tahu pengguna apa yang kurang
 //! dan apa yang bisa diperbaiki otomatis.
 
 use serde::{Deserialize, Serialize};
@@ -11,7 +11,7 @@ use crate::ffmpeg::Ffmpeg;
 pub struct EncoderSupport {
     pub name: String,
     pub available: bool,
-    /// Terbukti jalan lewat uji encode pendek, bukan cuma terdaftar.
+    /// Terbukti berjalan lewat uji encode pendek, bukan sekadar terdaftar.
     pub tested: Option<bool>,
     pub note: String,
 }
@@ -23,7 +23,7 @@ pub struct MachineReport {
     pub ffmpeg_version: Option<String>,
     pub ffprobe_found: bool,
     pub encoders: Vec<EncoderSupport>,
-    /// Encoder pilihan default, dengan alasan yang bisa dibaca user.
+    /// Encoder pilihan default, dengan alasan yang bisa dibaca pengguna.
     pub recommended_encoder: String,
     pub recommendation_note: String,
     pub cpu: String,
@@ -238,7 +238,7 @@ fn machine_info() -> (String, u32, Option<String>) {
 
 /// Baca nama GPU dari wmic/PowerShell. Kalau gagal, kembalikan None.
 fn gpu_name() -> Option<String> {
-    let out = std::process::Command::new("powershell")
+    let out = crate::proc::command_str("powershell")
         .args([
             "-NoProfile",
             "-Command",
@@ -255,7 +255,7 @@ fn gpu_name() -> Option<String> {
 
 /// Ruang disk bebas di drive tempat konfigurasi disimpan, dalam GB.
 fn disk_free_gb() -> Option<f64> {
-    let out = std::process::Command::new("powershell")
+    let out = crate::proc::command_str("powershell")
         .args([
             "-NoProfile",
             "-Command",

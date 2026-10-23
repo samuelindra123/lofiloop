@@ -2,9 +2,10 @@
 //! pembatalan bisa ditambahkan di satu tempat.
 
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 
 use crate::error::{Error, Result};
+use crate::proc::{command, command_str};
 
 /// Lokasi ffmpeg dan ffprobe yang dipakai.
 ///
@@ -113,7 +114,7 @@ impl Ffmpeg {
         }
         let script = "[Environment]::GetEnvironmentVariable('Path','Machine') + ';' + \
                       [Environment]::GetEnvironmentVariable('Path','User')";
-        let out = std::process::Command::new("powershell")
+        let out = command_str("powershell")
             .args(["-NoProfile", "-NonInteractive", "-Command", script])
             .output();
         let Ok(out) = out else {
@@ -144,7 +145,7 @@ impl Ffmpeg {
 
     /// Jalankan ffmpeg. Gagal kalau exit code bukan 0.
     pub fn run(&self, args: &[String], label: &str) -> Result<String> {
-        let out = Command::new(&self.ffmpeg)
+        let out = command(&self.ffmpeg)
             .args(args)
             .stdin(Stdio::null())
             .output()
@@ -191,7 +192,7 @@ impl Ffmpeg {
             full.insert(1, "pipe:1".into());
         }
 
-        let mut child = Command::new(&self.ffmpeg)
+        let mut child = command(&self.ffmpeg)
             .args(&full)
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
@@ -280,7 +281,7 @@ impl Ffmpeg {
 
     /// Jalankan ffprobe dan ambil stdout sebagai teks JSON.
     pub fn probe_json(&self, args: &[String]) -> Result<serde_json::Value> {
-        let out = Command::new(&self.ffprobe)
+        let out = command(&self.ffprobe)
             .args(args)
             .stdin(Stdio::null())
             .output()
@@ -300,7 +301,7 @@ impl Ffmpeg {
 
     /// Jalankan ffprobe dan ambil stdout sebagai teks mentah.
     pub fn probe_text(&self, args: &[String]) -> Result<String> {
-        let out = Command::new(&self.ffprobe)
+        let out = command(&self.ffprobe)
             .args(args)
             .stdin(Stdio::null())
             .output()
@@ -320,7 +321,7 @@ impl Ffmpeg {
 
     /// Jalankan ffmpeg dan ambil stdout sebagai teks (untuk -encoders, -filters, dan sejenisnya).
     pub fn run_stdout(&self, args: &[String], label: &str) -> Result<String> {
-        let out = Command::new(&self.ffmpeg)
+        let out = command(&self.ffmpeg)
             .args(args)
             .stdin(Stdio::null())
             .output()

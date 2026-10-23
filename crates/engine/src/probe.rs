@@ -22,8 +22,8 @@ pub struct MediaInfo {
 }
 
 impl MediaInfo {
-    /// Audio yang benar-benar terdengar? Video bisu atau audio yang cuma noise lantai
-    /// diperlakukan sebagai tanpa suara, sehingga audio user dipakai tanpa ragu.
+    /// Apakah audio benar-benar terdengar. Video bisu, atau audio yang hanya berisi derau
+    /// dasar, diperlakukan sebagai tanpa suara sehingga audio pengguna dipakai langsung.
     pub fn frame_duration_s(&self) -> f64 {
         if self.fps > 0.0 {
             1.0 / self.fps

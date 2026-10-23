@@ -63,6 +63,22 @@ Dirancang untuk laptop kelas bawah. Tidak ada berkas antara raksasa, tidak ada p
 yang tidak perlu. Puncak RAM 29 MB untuk video 1 jam.
 
 </td></tr>
+<tr><td valign="top">
+
+**Kendali ukuran berkas**
+
+Resolusi (360p–1080p), fps, dan bitrate bisa diatur. Turunkan untuk menghemat ruang, naikkan
+untuk kualitas. Lebar mengikuti rasio aspek sumber, dan perkiraan ukuran berkas ditampilkan
+sebelum render dijalankan.
+
+</td><td valign="top">
+
+**Pembaruan di dalam aplikasi**
+
+Saat dibuka, LofiLoop memeriksa rilis terbaru dan memberi tahu kalau ada versi baru. Pemasangan
+tetap dilakukan pengguna, sehingga aplikasi tidak pernah menimpa dirinya sendiri.
+
+</td></tr>
 </table>
 
 ## Memulai
@@ -119,6 +135,9 @@ lofiloop-cli.exe --merge "D:\musik\*.mp3" --merge-xfade 4 -o "D:\hasil\gabungan.
 | `--fade-out` | fade-out di akhir audio | `3.0` dtk |
 | `--policy` | `replace` / `duck` / `keep` suara video | `replace` |
 | `--encoder` | `quality` (libx264) atau `hardware` (h264_qsv) | `quality` |
+| `--height` | tinggi hasil dalam piksel; lebar mengikuti rasio aspek | ikut sumber |
+| `--fps` | frame per detik hasil | ikut sumber |
+| `--bitrate` | bitrate video | `4M` |
 | `--merge <berkas...>` | daftar lagu sesuai urutan | — |
 | `--merge-xfade` | transisi antar lagu, `0` = potong langsung | `3` dtk |
 | `--bitrate-audio` | bitrate audio hasil | `192k` |
@@ -208,8 +227,8 @@ setelah selesai. Untuk menaruhnya di tempat lain sejak awal, pakai `--work <fold
 
 ## Cara kerja
 
-Bagian ini menjelaskan keputusan rancangan yang membuat LofiLoop cepat. Kalau kamu hanya ingin
-memakai aplikasinya, bagian ini bisa dilewati.
+Bagian ini menjelaskan keputusan rancangan yang membuat LofiLoop cepat. Bagian ini bisa
+dilewati kalau kamu hanya ingin memakai aplikasinya.
 
 ### Pengulangan lewat salinan stream
 
@@ -252,6 +271,21 @@ Saat menggabungkan lebih dari empat lagu, setiap kelompok ditulis sebagai PCM, b
 AAC. Kalau berkas antara sudah di-encode, setiap tahap berikutnya harus mendekode lalu
 meng-encode ulang seluruh audio, dan pekerjaan encoding berlipat untuk setiap tahap tambahan.
 Menjaga berkas antara tetap PCM membuat encode hanya terjadi sekali di akhir.
+
+### Mengapa resolusi dan fps harus dipasang bersamaan
+
+Skala dan fps dipasang sebagai filter, sebelum pemotongan frame. Urutannya penting: pemotongan
+memakai nomor frame, jadi jumlah frame harus sudah final saat pemotongan dijalankan. Selain itu
+angka fps yang sama dipakai untuk dua hal sekaligus — menghitung nomor frame dan opsi `-r` pada
+ffmpeg. Kalau keduanya berbeda, panjang unit loop yang dihasilkan tidak sesuai rencana dan
+sambungannya menjadi kasar.
+
+### Mengapa pembaruan tidak dipasang otomatis
+
+Aplikasi memeriksa rilis terbaru dan menawarkan unduhan, tetapi tidak memasangnya sendiri.
+Pemasangan otomatis berarti aplikasi menimpa dirinya sendiri dengan berkas yang datang dari
+jaringan; satu langkah yang keliru bisa membuat aplikasi yang sedang dipakai tidak bisa
+dijalankan lagi. Karena itu pemasangan tetap dilakukan pengguna.
 
 ## Hasil pengukuran
 

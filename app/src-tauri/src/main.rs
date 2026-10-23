@@ -2,6 +2,8 @@
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod update;
+
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -47,6 +49,9 @@ struct RenderSummary {
     video_repeats: u64,
     elapsed_s: f64,
     policy_note: String,
+    output_width: u32,
+    output_height: u32,
+    output_fps: f64,
 }
 
 impl From<RenderReport> for RenderSummary {
@@ -60,6 +65,9 @@ impl From<RenderReport> for RenderSummary {
             video_repeats: r.video_repeats,
             elapsed_s: r.elapsed_s,
             policy_note: r.policy_note,
+            output_width: r.output_width,
+            output_height: r.output_height,
+            output_fps: r.output_fps,
         }
     }
 }
@@ -281,9 +289,9 @@ async fn merge_songs(
         merge::merge(&ctx, &ff, &opts).map_err(|e| e.to_string())
     })
     .await;
-    // Status dibersihkan di sini, TANPA operator `?`, supaya tetap dijalankan walau
-    // pekerjaan panik. Sebelumnya baris ini dilewati saat terjadi panik, dan aplikasi
-    // terkunci sampai ditutup.
+    // Status dibersihkan tanpa operator `?`, sehingga tetap dijalankan walau pekerjaan
+    // berhenti karena panik. Kalau baris ini terlewat, penanda "sedang berjalan" tidak
+    // pernah dilepas dan aplikasi menolak semua pekerjaan berikutnya sampai ditutup.
     {
         let mut running = state.running.lock().unwrap();
         *running = false;
@@ -391,6 +399,60 @@ async fn cancel_job(state: State<'_, Session>) -> Result<(), String> {
     }
 }
 
+/// Periksa apakah ada versi yang lebih baru di GitHub Releases.
+///
+/// Dijalankan di luar thread utama karena menunggu jaringan bisa memakan detik-an, dan
+/// thread utama adalah yang melayani seluruh UI.
+///
+/// Kegagalan di sini bukan kesalahan yang perlu ditampilkan ke pengguna: tidak ada internet,
+/// atau GitHub sedang tidak bisa dihubungi, bukan alasan untuk mengganggu orang yang sedang
+/// bekerja. Karena itu kegagalannya dikembalikan sebagai `None`, bukan sebagai error.
+#[tauri::command]
+async fn check_update(app: AppHandle) -> Option<update::UpdateInfo> {
+    let versi = app.package_info().version.to_string();
+    tauri::async_runtime::spawn_blocking(move || update::periksa(&versi).ok())
+        .await
+        .ok()
+        .flatten()
+}
+
+/// Buka sebuah alamat di peramban bawaan sistem.
+///
+/// Dipakai tombol unduh pada notifikasi pembaruan. Alamat yang diterima dibatasi hanya
+/// `http` dan `https`, supaya perintah ini tidak bisa dipakai membuka berkas lokal atau
+/// skema lain yang bisa menjalankan sesuatu.
+#[tauri::command]
+async fn open_url(url: String) -> Result<(), String> {
+    if !(url.starts_with("https://") || url.starts_with("http://")) {
+        return Err("alamat harus diawali https:// atau http://".into());
+    }
+    if url.contains(char::is_whitespace) || url.contains('"') || url.contains('\'') {
+        return Err("alamat mengandung karakter yang tidak diizinkan".into());
+    }
+
+    // PowerShell dipanggil dengan daftar argumen, bukan lewat penyusunan satu baris perintah.
+    // Dengan begitu isi `url` tidak pernah diurai ulang oleh shell, jadi tidak ada cara
+    // menyisipkan perintah lewat alamat.
+    tauri::async_runtime::spawn_blocking(move || {
+        lofiloop_engine::proc::command_str("powershell")
+            .args([
+                "-NoProfile",
+                "-NonInteractive",
+                "-Command",
+                "Start-Process",
+                "-FilePath",
+                &url,
+            ])
+            .status()
+            .map_err(|e| format!("tidak bisa membuka peramban: {e}"))?
+            .success()
+            .then_some(())
+            .ok_or_else(|| "peramban tidak bisa dibuka".to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -407,6 +469,8 @@ fn main() {
             render,
             cancel_job,
             job_state,
+            check_update,
+            open_url,
         ])
         .run(tauri::generate_context!())
         .expect("gagal menjalankan LofiLoop");

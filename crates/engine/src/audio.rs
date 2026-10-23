@@ -313,7 +313,7 @@ pub fn encode_unit(
 /// Susun audio akhir sepanjang `target_s`.
 ///
 /// - Bagian badan diulang lewat stream copy (cepat), dipotong tepat sebelum fade-out.
-/// - Ekor sepanjang `fade_out_s` dibuat dari unit asli lalu diberi fade-out dan di-encode
+/// - Ekor sepanjang `fade_out_s` diambil dari unit sumber, diberi fade-out, lalu di-encode
 ///   sekali. Hanya ekor ini yang di-encode ulang, jadi tetap cepat untuk durasi berapa pun.
 // Argumennya sengaja tetap terpisah, sama seperti `build_unit`.
 #[allow(clippy::too_many_arguments)]
@@ -361,8 +361,8 @@ pub fn assemble(
     //
     // Pemotongan dan fade dilakukan di dalam satu rantai filter dengan `asetpts` supaya
     // timestamp mulai dari 0. Kalau `-ss` dipakai di sisi output, `afade st=0` dihitung dari
-    // timestamp asli (misalnya 6,98 dtk) sehingga fade dianggap sudah lewat dan ekor jadi
-    // senyap total. Itu bug yang terukur di render 15 menit.
+    // timestamp sumber (misalnya 6,98 dtk), sehingga fade dianggap sudah terlewati dan
+    // ekornya menjadi senyap total. Rantai filter di bawah menghindari hal itu.
     let tail_path = out_dir.join("audio_tail.m4a");
     let tail_end = tail_offset + fade_out_s;
     let tail_args: Vec<String> = vec![

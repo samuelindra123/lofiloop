@@ -87,7 +87,7 @@ impl Ctx {
 /// Dipanggil hanya setelah semua hasil jadi, dan sengaja mengembalikan `()`: kegagalan
 /// menghapus tidak boleh menjatuhkan pekerjaan yang sebenarnya sudah berhasil. Berkas
 /// yang masih terkunci proses lain akan terhapus pada pembersihan berikutnya, dan kalau
-/// tidak pernah, folder itu cuma tersisa — bukan hasil yang rusak.
+/// tidak pernah, folder itu hanya tersisa — bukan hasil yang rusak.
 ///
 /// Folder dihapus lewat `Ctx` sendiri, bukan lewat jalur keluaran, supaya kalau suatu saat
 /// lokasi folder kerja berubah, pembersihannya ikut berubah tanpa perlu dicari ke mana-mana.

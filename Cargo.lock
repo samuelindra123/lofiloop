@@ -1721,10 +1721,11 @@ dependencies = [
 
 [[package]]
 name = "lofiloop-app"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "lofiloop-engine",
  "serde",
+ "serde_json",
  "tauri",
  "tauri-build",
  "tauri-plugin-dialog",
@@ -1732,7 +1733,7 @@ dependencies = [
 
 [[package]]
 name = "lofiloop-cli"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "lofiloop-engine",
  "serde",
@@ -1741,7 +1742,7 @@ dependencies = [
 
 [[package]]
 name = "lofiloop-engine"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "serde",
  "serde_json",
