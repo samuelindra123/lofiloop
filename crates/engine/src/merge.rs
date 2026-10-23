@@ -147,6 +147,19 @@ pub fn plan(durations: &[f64], crossfade_s: f64) -> Result<(f64, f64)> {
 
 /// Gabungkan semua lagu menjadi satu berkas.
 pub fn merge(ctx: &Ctx, ff: &Ffmpeg, opts: &MergeOptions) -> Result<MergeReport> {
+    // Alur penggabungan dijalankan di fungsi dalam, lalu hasilnya diperiksa di sini. Dengan
+    // cara ini ada satu tempat yang tahu apakah pekerjaan berhasil, sehingga folder kerja
+    // kosong bisa dirapikan tanpa menyentuh alur penggabungan itu sendiri.
+    let hasil = merge_dalam(ctx, ff, opts);
+    if hasil.is_err() {
+        // Gagal sebelum sempat menulis apa pun berarti folder kerjanya kosong dan tidak
+        // memberi petunjuk apa pun; kalau ada isinya, sengaja dibiarkan untuk diperiksa.
+        crate::run::bersihkan_kerja_kalau_kosong(ctx);
+    }
+    hasil
+}
+
+fn merge_dalam(ctx: &Ctx, ff: &Ffmpeg, opts: &MergeOptions) -> Result<MergeReport> {
     let started = std::time::Instant::now();
     if opts.tracks.len() < 2 {
         return Err(Error::Invalid(

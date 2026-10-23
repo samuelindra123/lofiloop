@@ -10,9 +10,16 @@ use std::sync::{Arc, Mutex};
 use lofiloop_engine::machine::MachineReport;
 use lofiloop_engine::merge::{self, MergeOptions};
 use lofiloop_engine::render::{render as run_render, RenderOptions, RenderReport};
+use lofiloop_engine::video;
 use lofiloop_engine::{config, machine, probe, setup, Config, Ctx, Ffmpeg};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, State};
+
+/// Crossfade video bawaan, dipakai untuk menghitung batas panjang loop saat berkas dipilih.
+///
+/// Nilainya harus sama dengan bawaan di `RenderOptions`. Angka ini hanya dipakai untuk
+/// memberi tahu batas sebelum render; nilai yang benar-benar dipakai selalu yang dikirim UI.
+const XFADE_VIDEO_DEFAULT: f64 = 2.0;
 
 #[derive(Default)]
 struct Session {
@@ -37,6 +44,13 @@ struct MediaSummary {
     fps: f64,
     sample_rate: Option<u32>,
     channels: Option<u32>,
+    /// Jumlah frame video, kalau terbaca.
+    frame_count: Option<u64>,
+    /// Panjang putaran loop terbesar yang muat untuk klip ini, detik.
+    /// `None` kalau klipnya tidak bisa dipakai sebagai sumber loop.
+    loop_maks_s: Option<f64>,
+    /// Kalimat penjelas tentang batas itu, dalam satuan detik.
+    loop_catatan: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -180,6 +194,11 @@ fn describe(path: String) -> Result<MediaSummary, String> {
     } else {
         false
     };
+    // Batas loop dihitung di sini, bukan di UI. Mesin yang tahu fps dan jumlah frame yang
+    // sebenarnya, jadi hanya mesin yang bisa menghitungnya dengan benar. UI cukup memakai
+    // angka ini untuk mengunci penggeser.
+    let batas = video::batas_loop(&info, XFADE_VIDEO_DEFAULT, video::TargetVideo::asal());
+
     Ok(MediaSummary {
         duration_s: info.duration_s,
         has_audio: info.has_audio,
@@ -189,6 +208,9 @@ fn describe(path: String) -> Result<MediaSummary, String> {
         fps: info.fps,
         sample_rate: info.sample_rate,
         channels: info.channels,
+        frame_count: info.frame_count,
+        loop_maks_s: batas.maks_s,
+        loop_catatan: Some(batas.penjelasan()),
     })
 }
 

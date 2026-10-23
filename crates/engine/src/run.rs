@@ -106,6 +106,37 @@ pub fn bersihkan_kerja(ctx: &Ctx) {
     }
 }
 
+/// Bersihkan folder kerja **hanya kalau isinya kosong atau cuma berkas sisa yang tidak berguna**.
+///
+/// Dipanggil setelah pekerjaan gagal. Folder yang berisi berkas antara sengaja dibiarkan,
+/// karena isinya itulah yang berguna untuk mencari tahu apa yang salah. Sebaliknya, folder
+/// kosong tidak memberi petunjuk apa pun dan hanya meninggalkan sampah, jadi dihapus.
+///
+/// Pemeriksaannya tidak menelusuri subfolder: cukup melihat apakah ada entri di tingkat
+/// teratas, karena berkas antara selalu ditulis langsung di sana. Kegagalan membaca folder
+/// diperlakukan sebagai "jangan hapus", karena membiarkan folder tersisa jauh lebih ringan
+/// akibatnya daripada menghapus sesuatu yang masih dibutuhkan.
+pub fn bersihkan_kerja_kalau_kosong(ctx: &Ctx) {
+    let dir = ctx.work_dir();
+    if dir.as_os_str().is_empty() {
+        return;
+    }
+    let kosong = match std::fs::read_dir(dir) {
+        Ok(mut isi) => isi.next().is_none(),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return,
+        Err(e) => {
+            eprintln!(
+                "[lofiloop] folder kerja tidak bisa dibaca, dibiarkan: {} ({e})",
+                dir.display()
+            );
+            return;
+        }
+    };
+    if kosong {
+        let _ = std::fs::remove_dir(dir);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -134,5 +165,38 @@ mod tests {
         bersihkan_kerja(&ctx);
 
         assert!(!dir.exists());
+    }
+
+    #[test]
+    fn folder_kerja_kosong_dihapus_setelah_gagal() {
+        let dir = std::env::temp_dir().join("lofiloop-kerja-kosong-setelah-gagal");
+        std::fs::create_dir_all(&dir).unwrap();
+        let ctx = Ctx::for_cli(&dir).unwrap();
+
+        bersihkan_kerja_kalau_kosong(&ctx);
+
+        assert!(
+            !dir.exists(),
+            "folder kosong tidak memberi petunjuk apa pun"
+        );
+    }
+
+    #[test]
+    fn folder_kerja_berisi_disimpan_agar_bisa_diperiksa() {
+        let dir = std::env::temp_dir().join("lofiloop-kerja-berisi-setelah-gagal");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("unit_video.mp4"), b"x").unwrap();
+        let ctx = Ctx::for_cli(&dir).unwrap();
+
+        bersihkan_kerja_kalau_kosong(&ctx);
+
+        assert!(
+            dir.exists(),
+            "isi folder kerja harus tetap ada untuk diperiksa"
+        );
+        assert!(dir.join("unit_video.mp4").exists());
+
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

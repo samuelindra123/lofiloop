@@ -119,6 +119,19 @@ pub struct RenderReport {
 /// `ffmpeg_dir` menunjuk folder berisi ffmpeg.exe; kalau `None`, lokasi dicari otomatis
 /// lewat konfigurasi, variabel lingkungan, folder aplikasi, lalu PATH.
 pub fn render(ctx: &Ctx, opts: &RenderOptions, ffmpeg_dir: Option<&str>) -> Result<RenderReport> {
+    // Seluruh pekerjaan dijalankan di fungsi dalam, lalu hasilnya diperiksa di sini. Dengan
+    // cara ini ada satu tempat yang tahu apakah pekerjaan berhasil, sehingga folder kerja
+    // kosong bisa dirapikan tanpa menyentuh alur render itu sendiri.
+    let hasil = render_dalam(ctx, opts, ffmpeg_dir);
+    if hasil.is_err() {
+        // Gagal sebelum sempat menulis apa pun berarti folder kerjanya kosong dan tidak
+        // memberi petunjuk apa pun; kalau ada isinya, sengaja dibiarkan untuk diperiksa.
+        crate::run::bersihkan_kerja_kalau_kosong(ctx);
+    }
+    hasil
+}
+
+fn render_dalam(ctx: &Ctx, opts: &RenderOptions, ffmpeg_dir: Option<&str>) -> Result<RenderReport> {
     let started = std::time::Instant::now();
     let ff = match crate::config::resolve_ffmpeg_dir(ffmpeg_dir) {
         Some(dir) => Ffmpeg::from_dir(&dir)?,

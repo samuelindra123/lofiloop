@@ -102,6 +102,30 @@
   ];
 
 
+  // Batas atas penggeser panjang loop. Diambil dari mesin, bukan dihitung di sini.
+  //
+  // Angka bulat dipakai supaya penggeser berhenti di detik utuh; batas sebenarnya sedikit
+  // lebih longgar, dan selisih itu tidak masalah karena hanya membatasi gerak penggeser,
+  // bukan menentukan keberhasilan render.
+  let loopMaks = $derived.by(() => {
+    const m = meta.video?.loop_maks_s;
+    if (m == null || m <= 0) return 60;
+    return Math.max(1, Math.floor(m));
+  });
+
+  // Apakah pengaturan saat ini akan ditolak mesin. Diperiksa sebelum render dikirim, supaya
+  // pengguna mendapat penjelasan dalam detik alih-alih menunggu pekerjaan gagal.
+  let masalahLoop = $derived.by(() => {
+    const m = meta.video?.loop_maks_s;
+    if (m == null || !meta.video) return null;
+    if (loopS <= m) return null;
+    return (
+      `Klip ini ${meta.video.duration_s.toFixed(2)} dtk pada ${meta.video.fps.toFixed(2)} fps, ` +
+      `jadi satu putaran loop paling panjang ${m.toFixed(2)} dtk. ` +
+      `Sekarang ${loopS} dtk — turunkan dulu.`
+    );
+  });
+
   // Ringkasan hasil: ukuran keluaran dan perkiraan besar berkas.
   //
   // Perkiraan dihitung dari bitrate dikali durasi, bukan pengukuran. Angka ini untuk
@@ -287,11 +311,31 @@
   async function describe(path, kind) {
     try {
       const info = await invoke("describe", { path });
+      // Metadata video lama dibuang lebih dulu supaya penyesuaian di bawah selalu berjalan
+      // saat berkasnya berganti, bukan hanya saat ini berkas pertama.
+      const adaVideoLama = Boolean(meta.video);
       files = { ...files, [kind]: path };
       meta = { ...meta, [kind]: info };
-      if (kind === "video" && info.duration_s && !meta.video) {
-        // Panjang loop tidak boleh melebihi durasi klip.
-        loopS = Math.min(loopS, Math.max(3, Math.floor(info.duration_s)));
+
+      if (kind === "video") {
+        // Batas loop dihitung mesin dari fps dan jumlah frame yang sebenarnya. UI tidak
+        // menghitungnya sendiri: menebak dari durasi saja pernah menghasilkan batas yang
+        // salah, dan penggeser mengirim angka yang tidak muat.
+        const maks = info.loop_maks_s;
+        if (maks != null && maks > 0) {
+          const turun = Math.min(loopS, Math.floor(maks));
+          const batasUI = Math.max(1, turun);
+          if (loopS > batasUI) {
+            loopS = batasUI;
+            pushLog(
+              `panjang loop disesuaikan ke ${loopS} dtk mengikuti batas klip (${maks.toFixed(2)} dtk)`,
+              "ok",
+            );
+          }
+          if (adaVideoLama) {
+            pushLog(`batas loop klip ini: ${maks.toFixed(2)} dtk`);
+          }
+        }
       }
     } catch (err) {
       pushLog(`${kind} tidak terbaca: ${err}`, "err");
@@ -313,6 +357,12 @@
   async function startRender() {
     if (!files.video) {
       banner = { kind: "err", text: "Pilih berkas video dulu." };
+      return;
+    }
+    // Dicegah di sini, bukan dibiarkan gagal di mesin: pesannya dalam detik dan muncul
+    // sebelum pengguna menunggu proses apa pun.
+    if (masalahLoop) {
+      banner = { kind: "err", text: masalahLoop };
       return;
     }
     busy = true;
@@ -632,9 +682,25 @@
           <div class="field">
             <div class="head">
               <label for="loop">Panjang loop</label>
-              <span class="readout">{loopS} dtk</span>
+              <span class="readout">
+                {loopS} dtk{#if meta.video?.loop_maks_s != null}
+                  <span class="batas"> / maks {Math.floor(meta.video.loop_maks_s)} dtk</span>
+                {/if}
+              </span>
             </div>
-            <input id="loop" type="range" min="3" max="60" bind:value={loopS} disabled={busy} />
+            <input
+              id="loop"
+              type="range"
+              min="1"
+              max={loopMaks}
+              bind:value={loopS}
+              disabled={busy || !files.video}
+            />
+            {#if masalahLoop}
+              <div class="field-warn">{masalahLoop}</div>
+            {:else if meta.video?.loop_catatan}
+              <div class="field-note">{meta.video.loop_catatan}</div>
+            {/if}
           </div>
 
           <div class="field">

@@ -213,6 +213,25 @@ select:focus-visible,
   font-weight: 600;
 }
 
+/* Batas penggeser ditampilkan di sebelah nilai sekarang, lebih redup, supaya terlihat
+   sebagai keterangan dan bukan sebagai nilai yang sedang dipakai. */
+.field .head .readout .batas { color: var(--text-faint); font-weight: 400; }
+
+/* Keterangan di bawah satu bidang: penjelasan biasa, atau peringatan yang menghalangi. */
+.field-note {
+  margin-top: 7px;
+  font-size: 12px;
+  color: var(--text-faint);
+  line-height: 1.45;
+}
+
+.field-warn {
+  margin-top: 7px;
+  font-size: 12px;
+  color: var(--warn);
+  line-height: 1.45;
+}
+
 input[type="range"] {
   width: 100%;
   height: 20px;

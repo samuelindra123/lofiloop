@@ -67,6 +67,98 @@ impl TargetVideo {
     }
 }
 
+/// Batas panjang satu putaran loop untuk sebuah klip.
+///
+/// Satu putaran disusun dari tiga bagian klip: sapuan tengah, ekor, dan kepala, yang
+/// disatukan oleh jendela crossfade. Ekor dan kepala memakai frame yang sama dengan
+/// crossfade, sehingga klip harus menyediakan panjang putaran **ditambah** jendela
+/// crossfade. Itulah sebabnya klip 10 detik tidak bisa menghasilkan putaran 10 detik.
+///
+/// Nilai yang dikembalikan adalah panjang terbesar yang masih muat, dalam detik, pada fps
+/// keluaran yang dipilih. UI memakai angka ini untuk membatasi penggeser, dan `build_unit`
+/// memakai perhitungan yang sama untuk menolak nilai yang tidak muat. Keduanya harus
+/// berasal dari sini supaya tidak ada dua versi aturan yang bisa berbeda.
+pub struct BatasLoop {
+    /// Panjang putaran terbesar yang muat, detik. `None` berarti klip tidak bisa dipakai
+    /// sama sekali, misalnya karena fps-nya tidak terbaca.
+    pub maks_s: Option<f64>,
+    /// Panjang klip sumber, detik.
+    pub klip_s: f64,
+    /// fps keluaran yang dihitung.
+    pub fps: f64,
+    /// Jendela crossfade yang dihitung, detik.
+    pub xfade_s: f64,
+}
+
+impl BatasLoop {
+    /// Apakah nilai yang diminta muat.
+    pub fn muat(&self, panjang_s: f64) -> bool {
+        match self.maks_s {
+            Some(maks) => panjang_s <= maks + 1e-9,
+            None => false,
+        }
+    }
+
+    /// Penjelasan singkat untuk ditampilkan ke pengguna, dalam satuan detik.
+    ///
+    /// Sengaja memakai detik, bukan jumlah frame: antarmuka tidak pernah menampilkan frame,
+    /// jadi angka frame tidak bisa dicocokkan oleh siapa pun yang membacanya.
+    pub fn penjelasan(&self) -> String {
+        match self.maks_s {
+            None => "fps klip ini tidak terbaca, jadi panjang loop tidak bisa dihitung".into(),
+            Some(maks) => format!(
+                "klip {:.2} dtk hanya bisa membuat satu putaran sampai {:.2} dtk \
+                 (crossfade {:.2} dtk diambil dari dalam klip yang sama)",
+                self.klip_s, maks, self.xfade_s
+            ),
+        }
+    }
+}
+
+/// Hitung batas panjang loop untuk sebuah klip.
+///
+/// `xfade_s` adalah jendela crossfade yang diinginkan. Nilainya dipotong lebih dulu dengan
+/// aturan yang sama seperti di `build_unit`, supaya batas yang dilaporkan ke UI benar-benar
+/// sama dengan yang akan diterima saat render.
+pub fn batas_loop(source: &MediaInfo, xfade_s: f64, target: TargetVideo) -> BatasLoop {
+    let fps = target.fps_efektif(source.fps);
+    let klip_s = source.duration_s;
+
+    if fps <= 0.0 || klip_s <= 0.0 {
+        return BatasLoop {
+            maks_s: None,
+            klip_s,
+            fps,
+            xfade_s,
+        };
+    }
+
+    let total_frame_klip = (klip_s * fps).floor() as u64;
+    let xfade_frame = (xfade_s * fps).round() as u64;
+
+    // Crossfade harus ada, tapi tidak boleh memakan seluruh klip. Aturan ini sama dengan
+    // yang dipakai `build_unit`, jadi batas yang dilaporkan konsisten dengan yang diterima.
+    let xfade_muat = xfade_frame > 0 && xfade_frame * 2 < total_frame_klip;
+    if !xfade_muat {
+        return BatasLoop {
+            maks_s: None,
+            klip_s,
+            fps,
+            xfade_s: xfade_frame as f64 / fps,
+        };
+    }
+
+    // Putaran memuat seluruh klip, jadi frame terbanyak yang bisa dipakai sama dengan
+    // jumlah frame klip itu sendiri.
+    let maks_frame = total_frame_klip;
+    BatasLoop {
+        maks_s: Some(maks_frame as f64 / fps),
+        klip_s,
+        fps,
+        xfade_s: xfade_frame as f64 / fps,
+    }
+}
+
 /// Bangun unit loop video dari `source` sepanjang `length_s`, dengan crossfade `xfade_s`.
 ///
 /// Susunan unit: frame klip `[xfade_frames .. length_frames]` lebih dulu, lalu jendela
@@ -107,21 +199,29 @@ pub fn build_unit(
     let xfade_frames = (xfade_s * fps).round() as u64;
 
     if xfade_frames == 0 {
-        return Err(Error::Invalid(
-            "crossfade terlalu pendek untuk fps ini".into(),
-        ));
+        return Err(Error::Invalid(format!(
+            "crossfade {xfade_s:.2} dtk terlalu pendek untuk {fps:.2} fps, \
+             sehingga tidak ada frame yang bisa dipakai menyambung"
+        )));
     }
     if xfade_frames * 2 >= total_frames {
         return Err(Error::Invalid(format!(
-            "crossfade {} dtk terlalu panjang untuk unit {} dtk",
-            xfade_s, length_s
+            "crossfade {xfade_s:.2} dtk terlalu panjang untuk putaran {length_s:.2} dtk \
+             pada {fps:.2} fps"
         )));
     }
+    // Pesannya memakai detik, bukan jumlah frame: antarmuka tidak pernah menampilkan frame,
+    // jadi angka frame tidak bisa dicocokkan dengan apa pun yang terlihat pengguna.
     if total_frames > source.frame_count.unwrap_or(u64::MAX) {
+        let batas = batas_loop(source, xfade_s, target);
+        let saran = match batas.maks_s {
+            Some(maks) => format!(" Turunkan panjang loop ke {maks:.2} dtk atau kurang."),
+            None => String::new(),
+        };
         return Err(Error::Invalid(format!(
-            "klip cuma {} frame, tidak cukup untuk unit {} frame",
-            source.frame_count.unwrap_or(0),
-            total_frames
+            "klip ini cuma {:.2} dtk ({fps:.2} fps), jadi belum bisa membuat satu putaran \
+             {length_s:.2} dtk.{saran}",
+            source.duration_s
         )));
     }
 
