@@ -217,8 +217,6 @@ impl From<lofiloop_engine::MergeReport> for MergeSummary {
     }
 }
 
-/// Gabungkan banyak lagu menjadi satu berkas, dengan transisi mulus antar lagu.
-
 /// Dialog pilih folder. Dipakai halaman gabung supaya tujuan hasil jelas sejak awal.
 #[tauri::command]
 async fn pick_folder(app: AppHandle, title: Option<String>) -> Result<Option<String>, String> {

@@ -28,6 +28,24 @@ jobs:
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
 
+      - name: Siapkan Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: app/ui/package-lock.json
+
+      # `app/src-tauri` punya build script Tauri yang membaca `frontendDist`
+      # (`../ui/dist`) saat dikompilasi. Tanpa folder itu, `cargo clippy` dan
+      # `cargo test` gagal di `generate_context!`. Jadi frontend dibangun lebih dulu.
+      - name: Pasang dependensi frontend
+        working-directory: app/ui
+        run: npm ci
+
+      - name: Bangun frontend untuk build script Tauri
+        working-directory: app/ui
+        run: npm run build
+
       - name: Format
         run: cargo fmt --all -- --check
 
