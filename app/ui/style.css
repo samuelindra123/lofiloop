@@ -1,0 +1,156 @@
+:root {
+  --bg: #101216;
+  --panel: #181b21;
+  --panel-2: #1f232b;
+  --line: #2a2f39;
+  --text: #e8eaef;
+  --muted: #9aa3b2;
+  --accent: #4f8cff;
+  --accent-soft: #1d2b47;
+  --ok: #3ecf8e;
+  --warn: #e0b552;
+  --err: #ff6b6b;
+  --radius: 12px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.5 "Segoe UI", system-ui, sans-serif;
+  user-select: none;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, #191c22, #14161a);
+}
+
+.brand { font-weight: 600; letter-spacing: .3px; }
+
+.tag {
+  font-size: 12px;
+  color: var(--muted);
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+.tag.ok { color: var(--ok); border-color: #23543d; }
+.tag.err { color: var(--err); border-color: #5a2a2a; }
+
+main {
+  padding: 18px;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.panel:last-of-type { grid-column: 1 / -1; }
+
+h2 {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
+}
+
+.drop {
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  background: var(--panel-2);
+}
+.drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+.drop.filled { border-style: solid; border-color: #2f4a2f; }
+
+.drop-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.hint { opacity: .7; }
+.drop-value { font-size: 13px; word-break: break-all; }
+.drop-meta { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.row:last-child { margin-bottom: 0; }
+.row > label { width: 120px; color: var(--muted); font-size: 13px; flex: none; }
+.row input[type="range"] { flex: 1; accent-color: var(--accent); }
+.row select {
+  flex: 1;
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+}
+
+.mono { font-variant-numeric: tabular-nums; color: var(--text); min-width: 78px; text-align: right; font-size: 13px; }
+
+.duration-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+}
+.chip:hover { border-color: var(--accent); }
+.chip.active { background: var(--accent-soft); border-color: var(--accent); }
+
+.actions { gap: 10px; }
+
+button.primary, button.ghost {
+  font: inherit;
+  border-radius: 9px;
+  padding: 10px 20px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+button.primary { background: var(--accent); color: #fff; font-weight: 600; }
+button.primary:disabled { background: #2b3242; color: var(--muted); cursor: default; }
+button.ghost { background: transparent; color: var(--text); border-color: var(--line); }
+button.ghost:disabled { color: #4d5561; cursor: default; }
+
+.progress { margin-top: 14px; }
+.progress-bar { height: 6px; background: var(--panel-2); border-radius: 999px; overflow: hidden; }
+.progress-fill { height: 100%; width: 0%; background: var(--accent); transition: width .25s ease-out; }
+.progress-text { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+.log {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  max-height: 180px;
+  overflow-y: auto;
+  font-size: 12px;
+  color: var(--muted);
+  font-family: Consolas, "Cascadia Mono", monospace;
+}
+.log li { padding: 3px 0; border-bottom: 1px solid #1c2027; }
+.log li.result { color: var(--ok); }
+.log li.error { color: var(--err); }

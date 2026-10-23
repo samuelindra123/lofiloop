@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="LofiLoop">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2a2f6b"/>
+      <stop offset="0.55" stop-color="#4a3a9e"/>
+      <stop offset="1" stop-color="#8a4fd0"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8fd4ff"/>
+      <stop offset="0.5" stop-color="#b79bff"/>
+      <stop offset="1" stop-color="#ff9ad5"/>
+    </linearGradient>
+  </defs>
+  <!-- Versi ikon kecil (16-48 px): tanpa gelombang audio, cincin lebih tebal, segitiga lebih besar. -->
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bg)"/>
+  <g fill="none" stroke="url(#ring)" stroke-width="58" stroke-linecap="round">
+    <path d="M 118 268 A 140 140 0 0 1 380 170"/>
+    <path d="M 394 244 A 140 140 0 0 1 132 342"/>
+  </g>
+  <g fill="url(#ring)">
+    <path d="M 410 122 L 410 214 L 330 190 Z" transform="rotate(8 405 186)"/>
+    <path d="M 102 390 L 102 298 L 182 322 Z" transform="rotate(8 107 326)"/>
+  </g>
+  <path d="M 216 188 L 216 324 L 334 256 Z" fill="#ffffff" stroke="#ffffff" stroke-width="18" stroke-linejoin="round"/>
+</svg>

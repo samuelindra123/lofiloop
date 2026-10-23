@@ -1,0 +1,15 @@
+/target
+/work
+/assets/ffmpeg
+node_modules
+/app/ui/dist
+/app/src-tauri/target
+
+# Hasil build installer: besar (ratusan MB) dan bisa dibuat ulang kapan saja.
+dist-installer/
+
+# Catatan perencanaan internal, bukan bagian dari repo publik.
+PLAN.md
+
+# Konfigurasi editor lokal.
+.claude/
