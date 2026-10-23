@@ -123,38 +123,28 @@
   ];
 
 
-  // Batas atas penggeser panjang loop, dihitung ulang setiap kali fps keluaran berubah.
+  // Batas atas penggeser panjang loop: durasi klip itu sendiri.
   //
-  // Batasnya berasal dari jumlah frame nyata di klip pada fps sumber, bukan pada fps
-  // keluaran. Pada fps keluaran yang lebih tinggi, jumlah frame yang diminta per detik
-  // bertambah, sehingga putaran yang bisa dibuat menjadi lebih pendek — bukan lebih panjang.
+  // Angka ini **tidak** berubah saat fps keluaran diubah. Perubahan fps dipasang sebelum
+  // pemotongan frame, jadi aliran yang dipotong sudah sepanjang durasi klip pada fps
+  // keluaran. Klip 10 detik tetap 10 detik pada 24 fps maupun 60 fps; yang berbeda hanya
+  // jumlah frame per detiknya. Membaginya dengan fps keluaran akan memotong video pengguna.
   let loopMaks = $derived.by(() => {
-    const v = meta.video;
-    const batasSumber = v?.loop_maks_s;
+    const batasSumber = meta.video?.loop_maks_s;
     if (batasSumber == null || batasSumber <= 0) return 60;
-    const fpsSumber = v.fps || 0;
-    const fpsPakai = targetFps || fpsSumber;
-    if (!fpsSumber || !fpsPakai) return Math.max(1, Math.floor(batasSumber));
-
-    // Frame nyata yang tersedia, dibagi fps keluaran: itulah durasi terpanjang yang masih
-    // bisa ditutup tanpa meminta frame yang tidak ada.
-    const frameTersedia = Math.round(batasSumber * fpsSumber);
-    const maks = frameTersedia / fpsPakai;
-    return Math.max(1, Math.floor(maks));
+    return Math.max(1, Math.floor(batasSumber));
   });
 
   // Apakah pengaturan saat ini akan ditolak mesin. Diperiksa sebelum render dikirim, supaya
   // pengguna mendapat penjelasan dalam detik alih-alih menunggu pekerjaan gagal.
   //
-  // Batasnya memakai frame nyata klip dibagi fps keluaran, karena frame itulah yang diminta
-  // setiap detik. Pada fps keluaran yang lebih tinggi, batasnya menjadi lebih pendek.
+  // Batasnya adalah durasi klip, dan tidak berubah karena fps keluaran.
   let masalahLoop = $derived.by(() => {
     const v = meta.video;
     if (!v || v.loop_maks_s == null) return null;
     if (loopS <= loopMaks) return null;
     return (
-      `Klip ini ${v.duration_s.toFixed(2)} dtk pada ${v.fps.toFixed(2)} fps. ` +
-      `Dengan keluaran ${targetFps || v.fps} fps, satu putaran paling panjang ` +
+      `Klip ini ${v.duration_s.toFixed(2)} dtk, jadi satu putaran paling panjang ` +
       `${loopMaks} dtk. Sekarang ${loopS} dtk — turunkan dulu.`
     );
   });
@@ -169,13 +159,14 @@
     const selisih = targetFps - v.fps;
     if (selisih > 0.01) {
       return (
-        `Klip ini ${v.fps.toFixed(2)} fps. Memilih ${targetFps} fps hanya menggandakan frame ` +
-        `yang sama: berkas jadi lebih besar dan render lebih lama, tapi gerakannya tidak ` +
-        `bertambah halus. Panjang loop yang bisa dibuat juga tidak bertambah.`
+        `Klip ini ${v.fps.toFixed(2)} fps. Memilih ${targetFps} fps menggandakan frame yang ` +
+        `sama supaya jumlahnya cukup: berkas jadi lebih besar dan render lebih lama, tapi ` +
+        `gerakannya tidak bertambah halus karena gambarnya sama. Panjang loop tetap ` +
+        `sepanjang klip.`
       );
     }
     if (selisih < -0.01) {
-      return `Turun dari ${v.fps.toFixed(2)} fps: berkas lebih kecil, gerakan sedikit kurang halus.`;
+      return `Turun dari ${v.fps.toFixed(2)} fps: berkas lebih kecil, gerakan sedikit kurang halus. Panjang loop tetap sepanjang klip.`;
     }
     return `Sama dengan sumber (${v.fps.toFixed(2)} fps).`;
   });
@@ -777,6 +768,7 @@
               type="range"
               min="1"
               max={loopMaks}
+              step="0.5"
               bind:value={loopS}
               disabled={busy || !files.video}
             />

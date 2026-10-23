@@ -122,7 +122,7 @@ impl BatasLoop {
     }
 
     /// Penjelasan singkat untuk ditampilkan ke pengguna, dalam satuan detik.
-    ///
+
     /// Sengaja memakai detik, bukan jumlah frame: antarmuka tidak pernah menampilkan frame,
     /// jadi angka frame tidak bisa dicocokkan oleh siapa pun yang membacanya.
     pub fn penjelasan(&self) -> String {
@@ -146,8 +146,16 @@ pub const TOLERANSI_FRAME_DETIK: f64 = 1.0 / 240.0;
 
 /// Hitung batas panjang loop untuk sebuah klip.
 ///
-/// `target` hanya memengaruhi fps keluaran yang dilaporkan; batasnya sendiri selalu
-/// dihitung dari panjang nyata klip pada fps sumber.
+/// Batasnya adalah **durasi klip itu sendiri**, dan tidak bergantung pada fps keluaran.
+///
+/// Alasannya ada pada urutan kerja ffmpeg: perubahan fps dipasang sebelum pemotongan frame,
+/// sehingga saat pemotongan berjalan, aliran sudah sepanjang durasi asli klip pada fps
+/// keluaran. Klip 10 detik tetap 10 detik pada 24 fps maupun 60 fps — yang berbeda hanya
+/// jumlah frame per detiknya. Menghitung batas dari frame sumber lalu membaginya dengan fps
+/// keluaran akan menghasilkan angka yang jauh lebih pendek daripada durasi klip, dan angka
+/// itu memotong video pengguna tanpa alasan.
+///
+/// Satu-satunya pengurangan adalah bahan crossfade, yang diambil dari dalam klip yang sama.
 pub fn batas_loop(source: &MediaInfo, xfade_s: f64, target: TargetVideo) -> BatasLoop {
     let fps_sumber = if source.fps > 0.0 { source.fps } else { 0.0 };
     let fps_keluaran = target.fps_efektif(source.fps);
@@ -166,46 +174,27 @@ pub fn batas_loop(source: &MediaInfo, xfade_s: f64, target: TargetVideo) -> Bata
         return kosong(xfade_s);
     }
 
-    // Frame nyata yang boleh dipakai ulang, dihitung pada fps sumber. Kalau klip melaporkan
-    // jumlah frame sendiri, angka itu yang dipakai karena lebih pasti daripada hasil hitungan
-    // durasi; keduanya bisa berbeda tipis karena pembulatan penampung.
-    let frame_tersedia = source
-        .frame_count
-        .filter(|n| *n > 0)
-        .unwrap_or_else(|| (klip_s * fps_sumber).floor() as u64);
-
-    // Waktu yang dibutuhkan satu putaran, dihitung pada fps sumber supaya jumlah frame yang
-    // diminta tidak pernah melebihi frame yang benar-benar ada.
+    // Crossfade harus menyisakan isi di tengah putaran. Aturannya dihitung pada fps sumber
+    // karena frame crossfade diambil dari klip asli.
     let xfade_frame_sumber = (xfade_s * fps_sumber).round() as u64;
-    if xfade_frame_sumber == 0 || xfade_frame_sumber * 2 >= frame_tersedia {
+    let frame_klip = (klip_s * fps_sumber).round() as u64;
+    if xfade_frame_sumber == 0 || xfade_frame_sumber * 2 >= frame_klip {
         return kosong(xfade_frame_sumber as f64 / fps_sumber);
     }
 
+    // Batas adalah durasi klip. Pemotongan terjadi setelah fps keluaran diterapkan, jadi
+    // seluruh durasi klip tersedia untuk dipakai satu putaran.
     BatasLoop {
-        maks_s: Some(frame_tersedia as f64 / fps_sumber),
+        maks_s: Some(klip_s),
         klip_s,
         fps_sumber,
         fps_keluaran,
         xfade_s: xfade_frame_sumber as f64 / fps_sumber,
-        frame_tersedia: Some(frame_tersedia),
+        frame_tersedia: Some(frame_klip),
     }
 }
 
-/// Berapa frame **nyata** klip yang terpakai untuk satu putaran sepanjang `length_s`.
-///
-/// Angka ini dihitung pada fps **sumber**, karena yang dibatasi adalah materi yang tersedia,
-/// bukan jumlah frame keluaran. `batas_loop` memakai aturan yang sama ketika menghitung
-/// panjang terbesar yang muat, sehingga angka yang ditampilkan ke pengguna selalu diterima
-/// kembali saat dikirim.
-///
-/// Mengembalikan `None` kalau fps sumber tidak terbaca, sehingga pemeriksaan dilewati
-/// ketimbang menolak berdasarkan angka yang tidak diketahui.
-fn frame_nyata_dipakai(source: &MediaInfo, length_s: f64) -> Option<u64> {
-    if source.fps <= 0.0 {
-        return None;
-    }
-    Some((length_s * source.fps).round() as u64)
-}
+/// Bangun unit loop video dari `source` sepanjang `length_s`, dengan crossfade `xfade_s`.
 ///
 /// Susunan unit: frame klip `[xfade_frames .. length_frames]` lebih dulu, lalu jendela
 /// crossfade yang berakhir tepat di frame 0 klip. Jadi saat unit diulang, frame terakhir
@@ -256,40 +245,22 @@ pub fn build_unit(
              pada {fps:.2} fps"
         )));
     }
-    // Pesannya memakai detik, bukan jumlah frame: antarmuka tidak pernah menampilkan frame,
-    // jadi angka frame tidak bisa dicocokkan dengan apa pun yang terlihat pengguna.
+    // Durasi putaran tidak boleh melebihi durasi klip.
     //
-    // Perbandingannya memakai jumlah frame **nyata** di klip pada fps sumber, bukan jumlah
-    // frame hasil perubahan fps. Kalau fps keluaran dinaikkan, ffmpeg menggandakan frame yang
-    // sudah ada, sehingga jumlah frame keluaran bisa jauh lebih banyak daripada yang dimiliki
-    // klip tanpa ada satu pun informasi baru.
-    if let Some(batas) = frame_nyata_dipakai(source, length_s) {
-        let tersedia = source
-            .frame_count
-            .filter(|n| *n > 0)
-            .unwrap_or_else(|| (source.duration_s * source.fps).floor() as u64);
-        if batas > tersedia {
-            let info = batas_loop(source, xfade_s, target);
-            let saran = match info.maks_s {
-                Some(maks) => format!(" Turunkan panjang loop ke {maks:.2} dtk atau kurang."),
-                None => String::new(),
-            };
-            let catatan_fps = if (target.fps_efektif(source.fps) - source.fps).abs() > 0.01 {
-                format!(
-                    " Klip ini {:.2} fps; memilih {:.2} fps hanya menggandakan frame yang sama, \
-                     sehingga tidak menambah panjang loop.",
-                    source.fps,
-                    target.fps_efektif(source.fps)
-                )
-            } else {
-                String::new()
-            };
-            return Err(Error::Invalid(format!(
-                "klip ini cuma {:.2} dtk pada {:.2} fps, jadi belum bisa membuat satu putaran \
-                 {length_s:.2} dtk.{saran}{catatan_fps}",
-                source.duration_s, source.fps
-            )));
-        }
+    // Perbandingannya memakai detik, bukan jumlah frame, karena pemotongan terjadi setelah
+    // fps keluaran diterapkan: pada fps keluaran berapa pun, panjang yang tersedia tetap
+    // sepanjang klip. Membandingkan jumlah frame akan salah begitu fps keluaran berbeda dari
+    // fps sumber — frame keluaran memang lebih banyak, tetapi durasinya sama.
+    let info_batas = batas_loop(source, xfade_s, target);
+    if !info_batas.muat(length_s) {
+        let saran = match info_batas.maks_s {
+            Some(maks) => format!(" Panjang loop paling besar {maks:.2} dtk."),
+            None => String::new(),
+        };
+        return Err(Error::Invalid(format!(
+            "klip ini {:.2} dtk, jadi belum bisa membuat satu putaran {length_s:.2} dtk.{saran}",
+            source.duration_s
+        )));
     }
 
     let head_end = xfade_frames; // frame 0..xfade_frames = jendela yang di-crossfade
@@ -476,15 +447,53 @@ mod tests {
     }
 
     #[test]
-    fn panjang_loop_yang_dilaporkan_muat_dipakai() {
+    fn panjang_loop_yang_dilaporkan_adalah_durasi_klip() {
         let klip = klip_10_detik();
-        let target = TargetVideo::asal();
-        let info = batas_loop(&klip, 2.0, target);
+        let info = batas_loop(&klip, 2.0, TargetVideo::asal());
         let maks = info.maks_s.expect("batas tersedia");
 
-        // 240 frame pada 24 fps = 10 dtk, dan itu tidak melebihi 240 frame yang tersedia.
-        let terpakai = frame_nyata_dipakai(&klip, maks).expect("fps terbaca");
-        assert_eq!(terpakai, 240);
+        // Klip 240 frame pada 24 fps berisi 10,01 dtk, dan seluruh durasi itu tersedia untuk
+        // satu putaran. Nilai yang lebih kecil berarti video pengguna terpotong tanpa alasan.
+        assert!(
+            (maks - klip.duration_s).abs() < 1e-9,
+            "batas harus sepanjang klip ({:.2} dtk), dapat {maks:.2}",
+            klip.duration_s
+        );
+    }
+
+    #[test]
+    fn fps_60_tidak_memotong_klip_menjadi_seperempat() {
+        // Cacat yang dilaporkan: pada 60 fps, batas pernah dilaporkan 4 dtk untuk klip
+        // 10 dtk, karena frame sumber dibagi fps keluaran. Itu memotong video pengguna.
+        let klip = klip_10_detik();
+        let info = batas_loop(
+            &klip,
+            2.0,
+            TargetVideo {
+                height: None,
+                fps: Some(60.0),
+            },
+        );
+        let maks = info.maks_s.expect("batas tersedia");
+        assert!(
+            maks > 9.9,
+            "pada 60 fps batas harus tetap sepanjang klip, bukan {maks:.2} dtk"
+        );
+    }
+
+    #[test]
+    fn putaran_sepanjang_klip_diterima_pada_semua_fps_keluaran() {
+        // Yang paling penting bagi pengguna: memakai seluruh video harus berhasil, pada fps
+        // keluaran berapa pun.
+        let klip = klip_10_detik();
+        for fps in [None, Some(24.0), Some(30.0), Some(60.0)] {
+            let target = TargetVideo { height: None, fps };
+            let info = batas_loop(&klip, 2.0, target);
+            assert!(
+                info.muat(klip.duration_s),
+                "seluruh klip harus muat sebagai satu putaran pada fps {fps:?}"
+            );
+        }
     }
 
     #[test]
