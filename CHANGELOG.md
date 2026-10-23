@@ -4,6 +4,34 @@ Semua perubahan penting pada proyek ini dicatat di berkas ini.
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/),
 dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 
+## [0.2.2] — 2026-10-23
+
+### Diperbaiki
+
+- **Panjang loop tidak lagi salah dihitung saat fps keluaran dinaikkan.** Sebelumnya batas
+  dihitung dari fps keluaran, sehingga klip 10 detik pada 24 fps dilaporkan berbatas 10 detik
+  saat dipilih 60 fps — padahal frame yang tersedia tetap 240, yaitu isi 10 detik pada 24 fps.
+  Akibatnya pesan galat menyarankan panjang yang sama dengan yang baru saja ditolak. Batas
+  sekarang dihitung dari frame nyata klip pada fps sumber.
+- Pesan galat menyebut fps sumber dan menjelaskan bahwa menaikkan fps keluaran di atas fps
+  sumber tidak menambah panjang loop yang bisa dibuat.
+- Nilai batas yang ditampilkan selalu diterima kembali saat dikirim, tanpa terpengaruh
+  pembulatan frame di kedua sisi.
+
+### Diubah
+
+- **Pemeriksaan pembaruan tidak lagi memanggil GitHub setiap kali aplikasi dibuka.** Hasilnya
+  disimpan dan dipakai ulang selama 24 jam. Tanpa jeda itu, membuka-tutup aplikasi berulang
+  kali bisa menghabiskan jatah permintaan per alamat IP dari GitHub, dan setelah terlampaui
+  seluruh permintaan dari alamat yang sama akan ditolak.
+- **Tombol "Periksa pembaruan"** di bilah judul, untuk memeriksa tanpa membuka-tutup aplikasi.
+- Kegagalan pemeriksaan tidak lagi diam. Alasannya ditampilkan saat pemeriksaan diminta
+  pengguna; pemeriksaan otomatis yang gagal tetap dibiarkan tanpa kabar.
+- Keterangan di bawah pilihan resolusi dan fps menjelaskan akibat tiap pilihan. Semua pilihan
+  tetap bebas dipakai.
+
+[0.2.2]: https://github.com/samuelindra123/lofiloop/releases/tag/v0.2.2
+
 ## [0.2.1] — 2026-10-23
 
 ### Diperbaiki
