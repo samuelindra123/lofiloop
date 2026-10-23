@@ -4,6 +4,31 @@ Semua perubahan penting pada proyek ini dicatat di berkas ini.
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/),
 dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 
+## [0.2.1] — 2026-10-23
+
+### Diperbaiki
+
+- **Panjang loop yang tidak muat dicegah sebelum render, bukan ditolak setelahnya.**
+  Sebelumnya penggeser bisa mengirim nilai yang melebihi kemampuan klip, dan render baru
+  berhenti setelah pekerjaan dikirim ke mesin. Nilai dari konfigurasi tersimpan juga ikut
+  terbawa saat berkas video diganti, sehingga penggeser bisa berisi angka dari sesi lain.
+  Sekarang batasnya dihitung mesin dari fps dan jumlah frame yang sebenarnya, penggeser
+  dikunci ke batas itu, dan peringatan muncul di bawah penggeser sebelum apa pun dijalankan.
+- **Pesan galat memakai satuan detik, bukan jumlah frame.** Antarmuka tidak pernah
+  menampilkan frame, jadi angka frame tidak bisa dicocokkan dengan apa pun yang terlihat.
+  Pesannya kini menyebut durasi klip, fps, panjang yang diminta, dan angka yang muat.
+- **Folder kerja kosong tidak lagi ditinggalkan setelah pekerjaan gagal.** Folder yang
+  berisi berkas antara tetap disimpan untuk diperiksa; folder yang kosong dihapus, karena
+  tidak memberi petunjuk apa pun tentang penyebab kegagalan.
+
+### Catatan
+
+- Klip 10 detik pada 24 fps hanya bisa menghasilkan satu putaran sampai 10 detik. Batas itu
+  berasal dari susunan unit loop: ekor dan kepala diambil dari dalam klip yang sama, jadi
+  klip harus menyediakan panjang putaran sekaligus bahan crossfade-nya.
+
+[0.2.1]: https://github.com/samuelindra123/lofiloop/releases/tag/v0.2.1
+
 ## [0.2.0] — 2026-10-23
 
 ### Ditambahkan
