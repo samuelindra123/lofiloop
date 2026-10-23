@@ -102,14 +102,13 @@ pub fn inspect(ffmpeg_dir: Option<&str>) -> MachineReport {
         },
     ];
 
-    for idx in 0..encoders.len() {
-        if !encoders[idx].available {
+    for enc in encoders.iter_mut() {
+        if !enc.available {
             continue;
         }
         // Uji nyata: encode satu detik, lihat apakah benar-benar jalan.
-        let name = encoders[idx].name.clone();
-        let tested = test_encoder(&ff, &name).is_some();
-        encoders[idx].tested = Some(tested);
+        let tested = test_encoder(&ff, &enc.name).is_some();
+        enc.tested = Some(tested);
     }
 
     let x264_ok = encoders

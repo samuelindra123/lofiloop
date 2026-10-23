@@ -127,6 +127,9 @@ pub fn plan(source_s: f64, target_s: f64, crossfade_s: f64, fade_out_s: f64) -> 
 /// Susunan: bagian lagu `[xfade .. akhir - xfade]` lebih dulu, lalu jendela crossfade
 /// equal-power yang menyatukan ujung lagu ke awalnya. Saat diulang, akhir menyambung
 /// ke awal tanpa klik.
+// Argumennya sengaja tetap terpisah, sama seperti `video::build_unit`: semuanya nilai skalar
+// yang dibaca sekali di sini.
+#[allow(clippy::too_many_arguments)]
 pub fn build_unit(
     ctx: &Ctx,
     ff: &Ffmpeg,
@@ -312,6 +315,8 @@ pub fn encode_unit(
 /// - Bagian badan diulang lewat stream copy (cepat), dipotong tepat sebelum fade-out.
 /// - Ekor sepanjang `fade_out_s` dibuat dari unit asli lalu diberi fade-out dan di-encode
 ///   sekali. Hanya ekor ini yang di-encode ulang, jadi tetap cepat untuk durasi berapa pun.
+// Argumennya sengaja tetap terpisah, sama seperti `build_unit`.
+#[allow(clippy::too_many_arguments)]
 pub fn assemble(
     ctx: &Ctx,
     ff: &Ffmpeg,

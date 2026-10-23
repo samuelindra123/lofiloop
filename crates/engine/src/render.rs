@@ -16,10 +16,11 @@ use crate::run::Ctx;
 use crate::video::{self, VideoUnit};
 
 /// Apa yang dilakukan pada audio asli video.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum AudioPolicy {
     /// Buang suara video, pakai audio user. Perilaku default.
+    #[default]
     Replace,
     /// Pertahankan suara video, abaikan audio user.
     Keep,
@@ -27,28 +28,17 @@ pub enum AudioPolicy {
     Duck,
 }
 
-impl Default for AudioPolicy {
-    fn default() -> Self {
-        AudioPolicy::Replace
-    }
-}
-
 /// Pilihan encoder video.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum EncoderChoice {
     /// libx264. Sambungan paling halus, dipakai default.
+    #[default]
     Quality,
     /// h264_qsv. Lebih cepat, tapi sambungan loop lebih kasar (terukur 1,73 vs 1,38).
     Hardware,
     /// Pilih otomatis.
     Auto,
-}
-
-impl Default for EncoderChoice {
-    fn default() -> Self {
-        EncoderChoice::Quality
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

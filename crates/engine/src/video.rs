@@ -28,6 +28,9 @@ pub struct VideoUnit {
 /// Susunan unit: frame klip `[xfade_frames .. length_frames]` lebih dulu, lalu jendela
 /// crossfade yang berakhir tepat di frame 0 klip. Jadi saat unit diulang, frame terakhir
 /// menyambung ke frame pertama tanpa lompatan.
+// Argumennya sengaja tetap terpisah: semuanya nilai skalar yang dibaca sekali di sini, dan
+// membungkusnya jadi struct hanya memindahkan kerumitan ke pemanggil tanpa menambah kejelasan.
+#[allow(clippy::too_many_arguments)]
 pub fn build_unit(
     ctx: &Ctx,
     ff: &Ffmpeg,

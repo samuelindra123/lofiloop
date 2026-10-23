@@ -384,6 +384,9 @@ fn parse_db(text: &str, key: &str) -> Option<f64> {
 /// Setiap putaran menggabungkan beberapa berkas menjadi satu. Jumlah masukan per putaran
 /// dijaga kecil supaya satu perintah ffmpeg tidak menahan terlalu banyak berkas terbuka,
 /// dan supaya kemajuan bisa dilaporkan berkali-kali, bukan sekali di akhir.
+// Argumennya sengaja tetap terpisah; semuanya sudah tersedia di pemanggil dan menggabungkannya
+// jadi struct hanya menambah satu lapisan tanpa menambah kejelasan.
+#[allow(clippy::too_many_arguments)]
 fn run_staged(
     ctx: &Ctx,
     ff: &Ffmpeg,
