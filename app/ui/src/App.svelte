@@ -129,10 +129,14 @@
   // pemotongan frame, jadi aliran yang dipotong sudah sepanjang durasi klip pada fps
   // keluaran. Klip 10 detik tetap 10 detik pada 24 fps maupun 60 fps; yang berbeda hanya
   // jumlah frame per detiknya. Membaginya dengan fps keluaran akan memotong video pengguna.
+  //
+  // Dibulatkan ke atas, bukan ke bawah: klip 10,01 dtk harus bisa dipakai penuh. Kalau
+  // dibulatkan ke bawah, pengguna terhenti di 10 dtk dan tidak pernah bisa memakai
+  // seluruh videonya.
   let loopMaks = $derived.by(() => {
     const batasSumber = meta.video?.loop_maks_s;
     if (batasSumber == null || batasSumber <= 0) return 60;
-    return Math.max(1, Math.floor(batasSumber));
+    return Math.max(1, Math.ceil(batasSumber * 2) / 2);
   });
 
   // Apakah pengaturan saat ini akan ditolak mesin. Diperiksa sebelum render dikirim, supaya
@@ -759,7 +763,7 @@
               <label for="loop">Panjang loop</label>
               <span class="readout">
                 {loopS} dtk{#if meta.video?.loop_maks_s != null}
-                  <span class="batas"> / maks {Math.floor(meta.video.loop_maks_s)} dtk</span>
+                  <span class="batas"> / maks {meta.video.loop_maks_s.toFixed(2)} dtk</span>
                 {/if}
               </span>
             </div>

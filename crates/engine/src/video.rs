@@ -129,9 +129,10 @@ impl BatasLoop {
         match self.maks_s {
             None => "fps klip ini tidak terbaca, jadi panjang loop tidak bisa dihitung".into(),
             Some(maks) => format!(
-                "klip {:.2} dtk ({:.2} fps), satu putaran paling panjang {:.2} dtk \
-                 — ekor dan kepala diambil dari dalam klip yang sama",
-                self.klip_s, self.fps_sumber, maks
+                "Klip ini {:.2} dtk pada {:.2} fps. Satu putaran bisa memakai seluruh klip \
+                 ({:.2} dtk); crossfade {:.2} dtk diambil dari bagian klip itu sendiri, jadi \
+                 tidak ada yang terbuang.",
+                self.klip_s, self.fps_sumber, maks, self.xfade_s
             ),
         }
     }
@@ -408,8 +409,8 @@ mod tests {
 
     #[test]
     fn batas_loop_tidak_berubah_walau_fps_keluaran_dinaikkan() {
-        // Inilah cacat yang dilaporkan: dengan fps keluaran 60, batas sebelumnya dihitung
-        // dari 60 fps sehingga melaporkan angka yang tidak bisa dipakai.
+        // Cacat yang dilaporkan: dengan fps keluaran 60, batas dihitung dari 60 fps sehingga
+        // klip 10 detik dilaporkan berbatas 4 detik dan videonya terpotong.
         let klip = klip_10_detik();
         let pada_sumber = batas_loop(&klip, 2.0, TargetVideo::asal());
         let pada_60 = batas_loop(
@@ -427,7 +428,12 @@ mod tests {
             (a - b).abs() < 1e-9,
             "batas tidak boleh berubah karena fps keluaran: {a} vs {b}"
         );
-        assert!((a - 10.0).abs() < 1e-9, "harus 10 dtk, dapat {a}");
+        // Batasnya adalah durasi klip itu sendiri, bukan durasi dibulatkan ke bawah.
+        assert!(
+            (a - klip.duration_s).abs() < 1e-9,
+            "harus sepanjang klip ({:.2} dtk), dapat {a:.2}",
+            klip.duration_s
+        );
     }
 
     #[test]
