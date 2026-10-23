@@ -134,7 +134,29 @@ Audio tidak perlu diatur secara manual; LofiLoop memilih berdasarkan isi videony
 
 ## Membangun
 
-Butuh Rust 1.75+, Node.js 20+, dan FFmpeg di PATH.
+Seluruh build berjalan di **GitHub Actions**. Tidak ada yang perlu dibangun di komputermu:
+cukup dorong kode, dan runner yang mengompilasi, menguji, dan membuat installer.
+
+| Pemicu | Yang dijalankan | Hasil |
+|---|---|---|
+| Dorongan ke `main`, atau pull request | `cargo fmt`, `cargo clippy`, `cargo test`, build Vite | status hijau/merah di tab Actions |
+| Tag `v*` | semua di atas, lalu build aplikasi + installer + zip portabel | rilis GitHub dengan berkas terpasang |
+
+```bash
+git tag v0.1.1
+git push origin v0.1.1
+```
+
+Tag itu satu-satunya langkah. Runner membuat `LofiLoop-Setup-0.1.1.exe` dan
+`LofiLoop-0.1.1-portable.zip` (aplikasi + FFmpeg di dalamnya), lalu menerbitkan rilis dengan
+catatan yang diambil dari `CHANGELOG.md`.
+
+Tombol **Run workflow** di tab Actions menjalankan pipeline tanpa membuat tag, dan menyimpan
+hasilnya sebagai artifact — berguna untuk mencoba sebelum benar-benar merilis.
+
+### Membangun di komputer sendiri
+
+Masih bisa, kalau memang perlu:
 
 ```bash
 git clone https://github.com/samuelindra123/lofiloop.git
@@ -174,6 +196,15 @@ python scripts/verify_output.py work/hasil.mp4
 
 `verify_output.py` memeriksa hasil secara objektif: kesinambungan sambungan audio dan video
 dibanding loop mentah, bukan sekadar "berkasnya ada".
+
+### Berkas antara
+
+Saat bekerja, LofiLoop menulis berkas antara di folder `<hasil>.work`, di sebelah berkas hasil.
+Folder itu **dihapus sendiri setelah pekerjaan selesai** — bisa 1–2 GB per render, jadi
+meninggalkannya akan cepat memenuhi disk.
+
+Kalau pekerjaan gagal, folder itu sengaja **disisakan** supaya bisa diperiksa; hapus manual
+setelah selesai. Untuk menaruhnya di tempat lain sejak awal, pakai `--work <folder>` di CLI.
 
 ## Cara kerja
 
@@ -249,6 +280,7 @@ app/src-tauri/    shell Tauri, tipis
 app/ui/           tampilan Svelte 5 (dua halaman: loop video, gabung lagu)
 scripts/          build, installer, gerbang dependensi, pemeriksa hasil
 docs/             catatan pengukuran dan laporan lingkungan
+.github/workflows/ uji otomatis dan penerbitan rilis
 ```
 
 Logika seluruhnya ada di `crates/engine`, terpisah dari UI. UI hanya memanggil, dan CLI memakai
@@ -260,7 +292,7 @@ pustaka yang sama. Karena itu setiap perilaku bisa diuji tanpa membuka jendela.
 |---|---|
 | Sistem | Windows 10 1809+ atau Windows 11 (WebView2) |
 | FFmpeg | disertakan installer; atau di PATH, `LOFILOOP_FFMPEG_DIR`, atau `assets/ffmpeg` |
-| Membangun | Rust 1.75+, Node.js 20+, Inno Setup 6+ (untuk installer) |
+| Membangun | tidak perlu — build berjalan di GitHub Actions; untuk build lokal: Rust 1.75+, Node.js 20+, Inno Setup 6+ |
 
 ## Lisensi
 

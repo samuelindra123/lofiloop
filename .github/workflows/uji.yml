@@ -1,0 +1,94 @@
+name: Uji
+
+# Dijalankan untuk setiap dorongan ke branch utama dan setiap pull request.
+# Ini yang menggantikan kebiasaan "coba dulu di laptop": kalau kode tidak lolos
+# di sini, tidak ada yang perlu dibangun.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  rust:
+    name: Rust — format, clippy, uji
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Siapkan toolchain Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Format
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Uji
+        run: cargo test --workspace
+
+  ui:
+    name: UI — periksa isi dan build Vite
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Siapkan Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: app/ui/package-lock.json
+
+      - name: Pasang dependensi
+        working-directory: app/ui
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: app/ui
+        run: npm run build
+
+  aplikasi:
+    name: Aplikasi — bangun exe release
+    runs-on: windows-latest
+    needs: [rust]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Siapkan toolchain Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Siapkan Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: app/ui/package-lock.json
+
+      - name: Pasang dependensi frontend
+        working-directory: app/ui
+        run: npm ci
+
+      - name: Bangun frontend dan aplikasi
+        shell: pwsh
+        run: ./scripts/build-app.ps1 -Release
+
+      - name: Simpan exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: lofiloop-app-exe
+          path: target/release/lofiloop-app.exe
+          retention-days: 7

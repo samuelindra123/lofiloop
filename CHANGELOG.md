@@ -4,6 +4,26 @@ Semua perubahan penting pada proyek ini dicatat di berkas ini.
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/),
 dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 
+## [0.1.1] — 2026-10-23
+
+### Diperbaiki
+
+- **Folder kerja tidak lagi tertinggal setelah pekerjaan selesai.** Sebelumnya setiap render
+  meninggalkan berkas antara di `<hasil>.work` di sebelah berkas hasil — sekitar 1–2 GB per
+  render — dan terus menumpuk. Sekarang folder itu dihapus setelah hasil jadi.
+  Kalau pekerjaan gagal, isinya sengaja **disisakan** supaya bisa diperiksa.
+- Penghapusan folder kerja tidak pernah bisa menggagalkan pekerjaan yang sudah berhasil:
+  berkas yang masih terkunci dibiarkan, dan hasil tetap dilaporkan sukses.
+
+### Diubah
+
+- **Seluruh build berjalan di GitHub Actions.** Setiap dorongan ke `main` menjalankan
+  `cargo fmt`, `cargo clippy`, `cargo test`, dan build frontend. Tag `v*` menghasilkan
+  installer dan versi portabel, lalu menerbitkan rilis secara otomatis.
+  Tidak ada lagi langkah build yang perlu dijalankan di komputer pengembang.
+
+[0.1.1]: https://github.com/samuelindra123/lofiloop/releases/tag/v0.1.1
+
 ## [0.1.0] — 2026-10-23
 
 Rilis pertama.

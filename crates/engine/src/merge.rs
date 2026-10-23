@@ -272,6 +272,11 @@ pub fn merge(ctx: &Ctx, ff: &Ffmpeg, opts: &MergeOptions) -> Result<MergeReport>
         let _ = std::fs::remove_file(p);
     }
 
+    // Hasil sudah utuh dan sudah diukur di atas, jadi folder kerjanya tidak dibutuhkan lagi.
+    // Kalau langkah mana pun sebelum ini gagal, baris ini tidak tercapai dan isi folder
+    // kerja tetap ada untuk diperiksa.
+    crate::run::bersihkan_kerja(ctx);
+
     Ok(MergeReport {
         output: opts.output.clone(),
         track_count: tracks.len(),

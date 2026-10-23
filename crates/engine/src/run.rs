@@ -81,3 +81,58 @@ impl Ctx {
         }
     }
 }
+
+/// Hapus folder kerja setelah pekerjaan selesai.
+///
+/// Dipanggil hanya setelah semua hasil jadi, dan sengaja mengembalikan `()`: kegagalan
+/// menghapus tidak boleh menjatuhkan pekerjaan yang sebenarnya sudah berhasil. Berkas
+/// yang masih terkunci proses lain akan terhapus pada pembersihan berikutnya, dan kalau
+/// tidak pernah, folder itu cuma tersisa — bukan hasil yang rusak.
+///
+/// Folder dihapus lewat `Ctx` sendiri, bukan lewat jalur keluaran, supaya kalau suatu saat
+/// lokasi folder kerja berubah, pembersihannya ikut berubah tanpa perlu dicari ke mana-mana.
+pub fn bersihkan_kerja(ctx: &Ctx) {
+    let dir = ctx.work_dir();
+    if dir.as_os_str().is_empty() {
+        return;
+    }
+    match std::fs::remove_dir_all(dir) {
+        Ok(()) => {}
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+        Err(e) => eprintln!(
+            "[lofiloop] folder kerja belum bisa dihapus: {} ({e})",
+            dir.display()
+        ),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bersihkan_kerja_menghapus_folder_beserta_isinya() {
+        let dir = std::env::temp_dir().join("lofiloop-bersih-kerja");
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("unit_video.mp4"), b"x").unwrap();
+        let ctx = Ctx::for_cli(&dir).unwrap();
+
+        bersihkan_kerja(&ctx);
+
+        assert!(!dir.exists(), "folder kerja harus sudah tidak ada");
+    }
+
+    #[test]
+    fn bersihkan_kerja_aman_kalau_folder_belum_ada() {
+        let dir = std::env::temp_dir().join("lofiloop-bersih-kerja-kosong");
+        let _ = std::fs::remove_dir_all(&dir);
+        let ctx = Ctx {
+            work_dir: dir.clone(),
+            ..Ctx::for_cli(std::env::temp_dir()).unwrap()
+        };
+
+        bersihkan_kerja(&ctx);
+
+        assert!(!dir.exists());
+    }
+}

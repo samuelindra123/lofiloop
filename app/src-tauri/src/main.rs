@@ -267,7 +267,6 @@ async fn merge_songs(
         merge::merge(&ctx, &ff, &opts).map_err(|e| e.to_string())
     })
     .await;
-
     // Status dibersihkan di sini, TANPA operator `?`, supaya tetap dijalankan walau
     // pekerjaan panik. Sebelumnya baris ini dilewati saat terjadi panik, dan aplikasi
     // terkunci sampai ditutup.
@@ -315,7 +314,6 @@ async fn render(app: AppHandle, state: State<'_, Session>, opts: RenderOptions) 
     })
     .await
     .map_err(|e| e.to_string())?;
-
     *state.running.lock().unwrap() = false;
     *state.cancel.lock().unwrap() = None;
 

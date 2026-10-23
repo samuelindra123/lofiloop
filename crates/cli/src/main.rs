@@ -44,7 +44,8 @@ Kualitas:
   --audio-bitrate <nilai> bitrate audio (default 192k)
 
 Lain-lain:
-  --work <folder>         folder kerja untuk berkas antara (default: <keluaran>.work)
+  --work <folder>         folder kerja untuk berkas antara (default: <keluaran>.work,
+                          dihapus sendiri setelah pekerjaan selesai)
   --check-deps            periksa ffmpeg dan encoder, lalu keluar
   -h, --help              tampilkan bantuan ini
 
@@ -143,7 +144,6 @@ fn run_merge(args: &[String], merge_at: usize) -> std::result::Result<(), String
     );
 
     let report = merge::merge(&ctx, &ff, &opts).map_err(|e| e.to_string())?;
-    let _ = std::fs::remove_dir_all(&work);
 
     println!();
     println!("== selesai ==");
@@ -283,7 +283,9 @@ fn run() -> std::result::Result<(), String> {
     }
     println!("kebijakan audio : {}", report.policy_note);
     println!("waktu proses    : {:.1} dtk", report.elapsed_s);
-    println!("folder kerja    : {work}");
+    if ctx.work_dir().exists() {
+        println!("folder kerja    : {work} (disisakan karena ada yang gagal dihapus)");
+    }
 
     Ok(())
 }

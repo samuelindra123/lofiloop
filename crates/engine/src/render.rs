@@ -321,6 +321,11 @@ pub fn render(ctx: &Ctx, opts: &RenderOptions, ffmpeg_dir: Option<&str>) -> Resu
     let duration_audio = out_info.has_audio.then_some(out_info.duration_s);
     let av_delta = duration_audio.map(|a| (out_info.duration_s - a).abs());
 
+    // Hasil sudah utuh dan sudah diukur di atas, jadi folder kerjanya tidak dibutuhkan lagi.
+    // Kalau langkah mana pun sebelum ini gagal, baris ini tidak tercapai dan isi folder
+    // kerja tetap ada untuk diperiksa.
+    crate::run::bersihkan_kerja(ctx);
+
     Ok(RenderReport {
         output: opts.output.clone(),
         duration_video_s: unit.duration_s * repeats as f64,

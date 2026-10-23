@@ -19,5 +19,5 @@ pub use machine::{inspect, MachineReport};
 pub use merge::{merge, MergeOptions, MergeReport};
 pub use probe::{audio_peak_dbfs, probe, MediaInfo};
 pub use render::{render, AudioPolicy, EncoderChoice, RenderOptions, RenderReport};
-pub use run::Ctx;
+pub use run::{bersihkan_kerja, Ctx};
 pub use setup::{download_and_install, InstallReport};
