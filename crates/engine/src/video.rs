@@ -122,7 +122,7 @@ impl BatasLoop {
     }
 
     /// Penjelasan singkat untuk ditampilkan ke pengguna, dalam satuan detik.
-
+    ///
     /// Sengaja memakai detik, bukan jumlah frame: antarmuka tidak pernah menampilkan frame,
     /// jadi angka frame tidak bisa dicocokkan oleh siapa pun yang membacanya.
     pub fn penjelasan(&self) -> String {
