@@ -46,9 +46,11 @@ struct MediaSummary {
     channels: Option<u32>,
     /// Jumlah frame video, kalau terbaca.
     frame_count: Option<u64>,
-    /// Panjang putaran loop terbesar yang muat untuk klip ini, detik.
-    /// `None` kalau klipnya tidak bisa dipakai sebagai sumber loop.
+    /// Panjang putaran loop terbesar yang muat untuk klip ini, detik, dihitung pada fps
+    /// sumber. `None` kalau klipnya tidak bisa dipakai sebagai sumber loop.
     loop_maks_s: Option<f64>,
+    /// fps sumber, dipakai UI untuk menghitung batas pada fps keluaran yang dipilih.
+    fps_sumber: f64,
     /// Kalimat penjelas tentang batas itu, dalam satuan detik.
     loop_catatan: Option<String>,
 }
@@ -210,6 +212,7 @@ fn describe(path: String) -> Result<MediaSummary, String> {
         channels: info.channels,
         frame_count: info.frame_count,
         loop_maks_s: batas.maks_s,
+        fps_sumber: batas.fps_sumber,
         loop_catatan: Some(batas.penjelasan()),
     })
 }
@@ -429,13 +432,49 @@ async fn cancel_job(state: State<'_, Session>) -> Result<(), String> {
 /// Kegagalan di sini bukan kesalahan yang perlu ditampilkan ke pengguna: tidak ada internet,
 /// atau GitHub sedang tidak bisa dihubungi, bukan alasan untuk mengganggu orang yang sedang
 /// bekerja. Karena itu kegagalannya dikembalikan sebagai `None`, bukan sebagai error.
+/// Hasil pemeriksaan versi, dikembalikan apa adanya termasuk saat gagal.
+///
+/// Kegagalan tidak dibiarkan tanpa kabar. Pemeriksaan yang diam-diam gagal membuat pengguna
+/// mengira fiturnya rusak, padahal penyebabnya bisa jadi tidak ada internet atau jatah
+/// permintaan GitHub sudah habis. Pesannya tetap singkat supaya tidak mengganggu.
+#[derive(Serialize)]
+struct UpdateHasil {
+    info: Option<update::UpdateInfo>,
+    /// Alasan singkat kalau pemeriksaan tidak berhasil. `None` berarti pemeriksaan berhasil.
+    galat: Option<String>,
+}
+
+/// Periksa apakah ada versi yang lebih baru di GitHub Releases.
+///
+/// Dijalankan di luar thread utama karena menunggu jaringan bisa memakan detik-an, dan
+/// thread utama adalah yang melayani seluruh UI.
+///
+/// `paksa` melewati hasil yang tersimpan. Tanpa paksaan, hasil yang masih berlaku dipakai
+/// kembali sehingga GitHub hanya dihubungi sekali sehari walau aplikasi dibuka berkali-kali.
+/// Batas itu perlu karena GitHub membatasi jumlah permintaan per alamat IP, dan terlampauinya
+/// akan menolak seluruh permintaan dari alamat itu — termasuk dari aplikasi lain.
 #[tauri::command]
-async fn check_update(app: AppHandle) -> Option<update::UpdateInfo> {
+async fn check_update(app: AppHandle, paksa: Option<bool>) -> UpdateHasil {
     let versi = app.package_info().version.to_string();
-    tauri::async_runtime::spawn_blocking(move || update::periksa(&versi).ok())
-        .await
-        .ok()
-        .flatten()
+    let paksa = paksa.unwrap_or(false);
+    let hasil =
+        tauri::async_runtime::spawn_blocking(move || update::periksa_terjadwal(&versi, paksa))
+            .await;
+
+    match hasil {
+        Ok(Ok(info)) => UpdateHasil {
+            info: Some(info),
+            galat: None,
+        },
+        Ok(Err(e)) => UpdateHasil {
+            info: None,
+            galat: Some(e),
+        },
+        Err(e) => UpdateHasil {
+            info: None,
+            galat: Some(format!("pemeriksaan gagal dijalankan: {e}")),
+        },
+    }
 }
 
 /// Buka sebuah alamat di peramban bawaan sistem.

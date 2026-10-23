@@ -17,10 +17,19 @@
 //! nomor versi, sebuah alamat unduhan, dan nama berkas. Nilainya dibatasi formatnya sebelum
 //! dipakai, dan tidak ada bagian dari jawaban itu yang dijalankan sebagai kode.
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 /// Alamat feed rilis. GitHub mengembalikan rilis terbaru yang tidak ditandai prarilis.
 const RELEASE_API: &str = "https://api.github.com/repos/samuelindra123/lofiloop/releases/latest";
+
+/// Berapa lama hasil pemeriksaan dipakai sebelum diperiksa ulang, dalam detik.
+///
+/// GitHub membatasi jumlah permintaan per alamat IP untuk pemanggil tanpa autentikasi.
+/// Tanpa jeda ini, membuka aplikasi berulang kali akan menghabiskan jatah tersebut, dan
+/// setelah terlampaui seluruh permintaan dari alamat IP yang sama akan ditolak — termasuk
+/// dari aplikasi lain. Satu hari cukup sering untuk pemberitahuan versi, dan tidak
+/// membebani layanan siapa pun.
+pub const JEDA_SIMPAN_DETIK: u64 = 24 * 60 * 60;
 
 /// Hasil pemeriksaan, dipakai UI untuk memutuskan apa yang ditampilkan.
 #[derive(Debug, Clone, Serialize)]
@@ -34,6 +43,20 @@ pub struct UpdateInfo {
     /// Laman rilis, tempat semua berkas bisa diunduh.
     pub halaman: String,
     /// Nama berkas pemasang kalau ada, misalnya `LofiLoop-Setup-0.2.0.exe`.
+    pub pemasang: Option<String>,
+    /// Hasil ini diambil dari simpanan, bukan dari GitHub pada saat ini.
+    pub dari_simpanan: bool,
+}
+
+/// Hasil pemeriksaan yang disimpan di disk, beserta waktu pengambilannya.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Simpanan {
+    /// Waktu pengambilan, dalam detik sejak epoch Unix.
+    pub diambil_pada: u64,
+    /// Versi aplikasi saat pemeriksaan itu dilakukan.
+    pub versi_saat_itu: String,
+    pub latest: String,
+    pub halaman: String,
     pub pemasang: Option<String>,
 }
 
@@ -97,8 +120,8 @@ pub fn ambil_json(url: &str) -> Result<String, String> {
     Ok(String::from_utf8_lossy(&out.stdout).into_owned())
 }
 
-/// Periksa rilis terbaru, lalu bandingkan dengan versi yang sedang berjalan.
-pub fn periksa(versi_sekarang: &str) -> Result<UpdateInfo, String> {
+/// Tanyakan langsung ke GitHub, tanpa memeriksa simpanan.
+fn tanya_github(versi_sekarang: &str) -> Result<UpdateInfo, String> {
     let teks = ambil_json(RELEASE_API)?;
     let nilai: serde_json::Value =
         serde_json::from_str(&teks).map_err(|e| format!("jawaban GitHub tidak terbaca: {e}"))?;
@@ -134,7 +157,89 @@ pub fn periksa(versi_sekarang: &str) -> Result<UpdateInfo, String> {
         latest,
         halaman,
         pemasang,
+        dari_simpanan: false,
     })
+}
+
+/// Waktu sekarang dalam detik sejak epoch Unix.
+fn sekarang_detik() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
+}
+
+/// Lokasi berkas simpanan hasil pemeriksaan.
+fn path_simpanan() -> Option<std::path::PathBuf> {
+    let base = std::env::var_os("APPDATA")
+        .map(std::path::PathBuf::from)
+        .or_else(|| std::env::var_os("HOME").map(std::path::PathBuf::from))?;
+    Some(base.join("LofiLoop").join("update-check.json"))
+}
+
+/// Baca simpanan, kalau ada dan masih berlaku.
+///
+/// Simpanan dianggap tidak berlaku kalau: berkasnya tidak ada, isinya tidak terbaca,
+/// usianya melewati [`JEDA_SIMPAN_DETIK`], atau versi aplikasi berubah sejak pemeriksaan
+/// itu dibuat. Pemeriksaan versi aplikasi penting supaya setelah pengguna memperbarui,
+/// hasil lama tidak terus dipakai.
+fn baca_simpanan(versi_sekarang: &str) -> Option<Simpanan> {
+    let path = path_simpanan()?;
+    let teks = std::fs::read_to_string(&path).ok()?;
+    let simpanan: Simpanan = serde_json::from_str(&teks).ok()?;
+
+    if simpanan.versi_saat_itu != versi_sekarang {
+        return None;
+    }
+    let umur = sekarang_detik().saturating_sub(simpanan.diambil_pada);
+    if umur >= JEDA_SIMPAN_DETIK {
+        return None;
+    }
+    Some(simpanan)
+}
+
+/// Simpan hasil pemeriksaan. Kegagalan menyimpan diabaikan: hasilnya tetap dipakai untuk
+/// sesi berjalan, dan yang hilang hanya penghematan permintaan pada pembukaan berikutnya.
+fn tulis_simpanan(simpanan: &Simpanan) {
+    let Some(path) = path_simpanan() else { return };
+    if let Some(parent) = path.parent() {
+        if std::fs::create_dir_all(parent).is_err() {
+            return;
+        }
+    }
+    if let Ok(teks) = serde_json::to_string_pretty(simpanan) {
+        let _ = std::fs::write(&path, teks);
+    }
+}
+
+/// Periksa pembaruan dengan memanfaatkan simpanan.
+///
+/// `paksa` melewati simpanan, dipakai tombol "Periksa sekarang" di aplikasi. Tanpa paksaan,
+/// hasil yang masih berlaku dipakai kembali sehingga GitHub hanya dihubungi sekali sehari
+/// walau aplikasi dibuka berkali-kali.
+pub fn periksa_terjadwal(versi_sekarang: &str, paksa: bool) -> Result<UpdateInfo, String> {
+    if !paksa {
+        if let Some(s) = baca_simpanan(versi_sekarang) {
+            return Ok(UpdateInfo {
+                current: versi_sekarang.to_string(),
+                tersedia: lebih_baru(&s.latest, versi_sekarang),
+                latest: s.latest,
+                halaman: s.halaman,
+                pemasang: s.pemasang,
+                dari_simpanan: true,
+            });
+        }
+    }
+
+    let info = tanya_github(versi_sekarang)?;
+    tulis_simpanan(&Simpanan {
+        diambil_pada: sekarang_detik(),
+        versi_saat_itu: versi_sekarang.to_string(),
+        latest: info.latest.clone(),
+        halaman: info.halaman.clone(),
+        pemasang: info.pemasang.clone(),
+    });
+    Ok(info)
 }
 
 #[cfg(test)]

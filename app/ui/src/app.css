@@ -308,6 +308,14 @@ select:hover { border-color: #38404f; }
 .btn:hover:not(:disabled) { border-color: #465264; background: var(--surface-3); }
 .btn:disabled { opacity: 0.4; cursor: default; }
 
+/* Tombol kecil untuk tindakan sampingan, seperti memeriksa pembaruan atau menutup
+   keterangan. Ukurannya dikecilkan supaya tidak bersaing dengan tombol utama. */
+.btn.kecil {
+  padding: 5px 11px;
+  font-size: 12px;
+  flex: none;
+}
+
 .btn.primary {
   background: var(--accent);
   border-color: transparent;

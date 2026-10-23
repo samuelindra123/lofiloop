@@ -41,21 +41,42 @@
   // ---------- pembaruan ----------
   let infoUpdate = $state(null);
   let updateDitolak = $state(false);
+  let updateBusy = $state(false);
+  let updateGalat = $state(null);
 
   /**
    * Periksa versi terbaru, lalu simpan hasilnya untuk ditampilkan.
    *
-   * Tujuan `updateDitolak` adalah menghormati pilihan pengguna: begitu notifikasi ditutup,
-   * ia tidak muncul lagi sampai aplikasi dibuka ulang. Kesalahan jaringan sengaja tidak
-   * ditampilkan sama sekali, karena gagal menghubungi GitHub bukan masalah bagi pengguna
-   * yang tidak sedang membutuhkan pembaruan.
+   * `paksa` dipakai tombol periksa manual: tanpa itu, hasil yang masih berlaku dipakai
+   * kembali sehingga GitHub hanya dihubungi sekali sehari. Batas itu melindungi jatah
+   * permintaan per alamat IP, yang kalau habis akan menolak seluruh permintaan dari alamat
+   * yang sama.
+   *
+   * Kegagalan ditampilkan hanya kalau pemeriksaan diminta pengguna. Pemeriksaan otomatis
+   * yang gagal dibiarkan tanpa kabar, karena tidak ada internet bukan hal yang perlu
+   * dilaporkan kepada orang yang tidak sedang membutuhkan pembaruan.
    */
-  async function periksaPembaruan() {
+  async function periksaPembaruan(paksa = false) {
+    if (updateBusy) return;
+    updateBusy = true;
+    if (paksa) updateGalat = null;
     try {
-      const info = await invoke("check_update");
-      if (info?.tersedia) infoUpdate = info;
-    } catch {
-      // Tidak ada yang perlu dilakukan.
+      const hasil = await invoke("check_update", { paksa });
+      if (hasil?.galat) {
+        if (paksa) updateGalat = hasil.galat;
+        return;
+      }
+      updateGalat = null;
+      if (hasil?.info?.tersedia) {
+        infoUpdate = hasil.info;
+        if (paksa) updateDitolak = false;
+      } else if (paksa) {
+        updateGalat = "Kamu sudah memakai versi terbaru.";
+      }
+    } catch (err) {
+      if (paksa) updateGalat = `Pemeriksaan gagal: ${err}`;
+    } finally {
+      updateBusy = false;
     }
   }
 
@@ -102,28 +123,78 @@
   ];
 
 
-  // Batas atas penggeser panjang loop. Diambil dari mesin, bukan dihitung di sini.
+  // Batas atas penggeser panjang loop, dihitung ulang setiap kali fps keluaran berubah.
   //
-  // Angka bulat dipakai supaya penggeser berhenti di detik utuh; batas sebenarnya sedikit
-  // lebih longgar, dan selisih itu tidak masalah karena hanya membatasi gerak penggeser,
-  // bukan menentukan keberhasilan render.
+  // Batasnya berasal dari jumlah frame nyata di klip pada fps sumber, bukan pada fps
+  // keluaran. Pada fps keluaran yang lebih tinggi, jumlah frame yang diminta per detik
+  // bertambah, sehingga putaran yang bisa dibuat menjadi lebih pendek — bukan lebih panjang.
   let loopMaks = $derived.by(() => {
-    const m = meta.video?.loop_maks_s;
-    if (m == null || m <= 0) return 60;
-    return Math.max(1, Math.floor(m));
+    const v = meta.video;
+    const batasSumber = v?.loop_maks_s;
+    if (batasSumber == null || batasSumber <= 0) return 60;
+    const fpsSumber = v.fps || 0;
+    const fpsPakai = targetFps || fpsSumber;
+    if (!fpsSumber || !fpsPakai) return Math.max(1, Math.floor(batasSumber));
+
+    // Frame nyata yang tersedia, dibagi fps keluaran: itulah durasi terpanjang yang masih
+    // bisa ditutup tanpa meminta frame yang tidak ada.
+    const frameTersedia = Math.round(batasSumber * fpsSumber);
+    const maks = frameTersedia / fpsPakai;
+    return Math.max(1, Math.floor(maks));
   });
 
   // Apakah pengaturan saat ini akan ditolak mesin. Diperiksa sebelum render dikirim, supaya
   // pengguna mendapat penjelasan dalam detik alih-alih menunggu pekerjaan gagal.
+  //
+  // Batasnya memakai frame nyata klip dibagi fps keluaran, karena frame itulah yang diminta
+  // setiap detik. Pada fps keluaran yang lebih tinggi, batasnya menjadi lebih pendek.
   let masalahLoop = $derived.by(() => {
-    const m = meta.video?.loop_maks_s;
-    if (m == null || !meta.video) return null;
-    if (loopS <= m) return null;
+    const v = meta.video;
+    if (!v || v.loop_maks_s == null) return null;
+    if (loopS <= loopMaks) return null;
     return (
-      `Klip ini ${meta.video.duration_s.toFixed(2)} dtk pada ${meta.video.fps.toFixed(2)} fps, ` +
-      `jadi satu putaran loop paling panjang ${m.toFixed(2)} dtk. ` +
-      `Sekarang ${loopS} dtk — turunkan dulu.`
+      `Klip ini ${v.duration_s.toFixed(2)} dtk pada ${v.fps.toFixed(2)} fps. ` +
+      `Dengan keluaran ${targetFps || v.fps} fps, satu putaran paling panjang ` +
+      `${loopMaks} dtk. Sekarang ${loopS} dtk — turunkan dulu.`
     );
+  });
+
+  // Keterangan pilihan bentuk keluaran. Semua pilihan tetap dibuka; yang dilakukan di sini
+  // hanya memberi tahu akibatnya, supaya tidak ada yang memilih angka besar tanpa sadar
+  // bahwa berkasnya membengkak tanpa manfaat.
+  let catatanFps = $derived.by(() => {
+    const v = meta.video;
+    if (!v || !v.fps) return null;
+    if (targetFps === 0) return null;
+    const selisih = targetFps - v.fps;
+    if (selisih > 0.01) {
+      return (
+        `Klip ini ${v.fps.toFixed(2)} fps. Memilih ${targetFps} fps hanya menggandakan frame ` +
+        `yang sama: berkas jadi lebih besar dan render lebih lama, tapi gerakannya tidak ` +
+        `bertambah halus. Panjang loop yang bisa dibuat juga tidak bertambah.`
+      );
+    }
+    if (selisih < -0.01) {
+      return `Turun dari ${v.fps.toFixed(2)} fps: berkas lebih kecil, gerakan sedikit kurang halus.`;
+    }
+    return `Sama dengan sumber (${v.fps.toFixed(2)} fps).`;
+  });
+
+  let catatanResolusi = $derived.by(() => {
+    const v = meta.video;
+    if (!v || !v.height || targetHeight === 0) return null;
+    if (targetHeight > v.height) {
+      return (
+        `Sumber ${v.height}p. Menaikkan ke ${targetHeight}p tidak menambah detail karena ` +
+        `informasinya tidak ada di berkas sumber; berkasnya hanya jadi lebih besar. ` +
+        `Berguna kalau kamu ingin menyamakan bentuk dengan materi lain.`
+      );
+    }
+    if (targetHeight < v.height) {
+      const persen = Math.round((targetHeight / v.height) * 100);
+      return `Turun ke ${persen}% dari sumber: berkas jauh lebih kecil.`;
+    }
+    return null;
   });
 
   // Ringkasan hasil: ukuran keluaran dan perkiraan besar berkas.
@@ -313,7 +384,6 @@
       const info = await invoke("describe", { path });
       // Metadata video lama dibuang lebih dulu supaya penyesuaian di bawah selalu berjalan
       // saat berkasnya berganti, bukan hanya saat ini berkas pertama.
-      const adaVideoLama = Boolean(meta.video);
       files = { ...files, [kind]: path };
       meta = { ...meta, [kind]: info };
 
@@ -331,9 +401,6 @@
               `panjang loop disesuaikan ke ${loopS} dtk mengikuti batas klip (${maks.toFixed(2)} dtk)`,
               "ok",
             );
-          }
-          if (adaVideoLama) {
-            pushLog(`batas loop klip ini: ${maks.toFixed(2)} dtk`);
           }
         }
       }
@@ -491,9 +558,26 @@
         </span>
       </div>
     {/if}
+    {#if view === "main"}
+      <button
+        class="btn kecil"
+        onclick={() => periksaPembaruan(true)}
+        disabled={updateBusy}
+        title="Periksa versi terbaru di GitHub"
+      >{updateBusy ? "memeriksa…" : "Periksa pembaruan"}</button>
+    {/if}
   </header>
 
   <div class="body">
+    {#if view === "main" && updateGalat}
+      <div class="note warn" style="max-width:1180px;margin:0 auto 18px">
+        {updateGalat}
+        <button class="btn kecil" style="margin-left:10px" onclick={() => (updateGalat = null)}>
+          Tutup
+        </button>
+      </div>
+    {/if}
+
     {#if view === "main" && infoUpdate && !updateDitolak}
       <div class="note update" style="max-width:1180px;margin:0 auto 18px">
         <div class="update-text">
@@ -764,6 +848,9 @@
                 >{r.label}</button>
               {/each}
             </div>
+            {#if catatanResolusi}
+              <div class="field-note">{catatanResolusi}</div>
+            {/if}
           </div>
 
           <div class="field">
@@ -782,6 +869,9 @@
                 >{f.label}</button>
               {/each}
             </div>
+            {#if catatanFps}
+              <div class="field-note">{catatanFps}</div>
+            {/if}
           </div>
 
           <div class="field">
