@@ -1,7 +1,7 @@
 {
   "identifier": "dev.lofiloop.desktop",
   "productName": "LofiLoop",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "build": {
     "frontendDist": "../ui/dist"
   },

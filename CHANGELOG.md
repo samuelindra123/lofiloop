@@ -4,6 +4,28 @@ Semua perubahan penting pada proyek ini dicatat di berkas ini.
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/),
 dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 
+## [0.2.3] — 2026-10-23
+
+### Diperbaiki
+
+- **Panjang loop memakai seluruh video, bukan sebagian.** Pada pilihan 60 fps, klip 10 detik
+  dilaporkan berbatas 4 detik sehingga videonya terpotong — bukan diulang, melainkan
+  dipangkas. Penyebabnya batas dihitung dari frame sumber lalu dibagi fps keluaran. Perubahan
+  fps dipasang sebelum pemotongan frame, jadi aliran yang dipotong tetap sepanjang durasi
+  klip: 10 detik pada 24 fps maupun 60 fps. Batas sekarang adalah durasi klip itu sendiri,
+  dan tidak lagi berubah karena fps keluaran.
+- Batas penggeser dibulatkan ke atas ke setengah detik. Sebelumnya dibulatkan ke bawah,
+  sehingga klip 10,01 detik berhenti di 10 detik dan seluruh video tidak pernah bisa dipakai.
+- Keterangan pada pilihan fps tidak lagi menyatakan bahwa fps memengaruhi panjang loop.
+
+### Catatan
+
+- Fps, resolusi, dan bitrate tetap bisa dipilih bebas. Pilihan di atas fps sumber tetap
+  diizinkan, disertai keterangan bahwa frame-nya digandakan sehingga berkas lebih besar
+  tanpa gerakan yang lebih halus.
+
+[0.2.3]: https://github.com/samuelindra123/lofiloop/releases/tag/v0.2.3
+
 ## [0.2.2] — 2026-10-23
 
 ### Diperbaiki
