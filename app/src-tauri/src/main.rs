@@ -88,14 +88,26 @@ fn check_engine() -> EngineStatus {
     match discover_ffmpeg() {
         Ok(ff) => {
             if !ff.has_encoder("libx264") && !ff.has_encoder("h264_qsv") {
-                return EngineStatus { ok: false, detail: "FFmpeg tidak punya encoder H.264".into() };
+                return EngineStatus {
+                    ok: false,
+                    detail: "FFmpeg tidak punya encoder H.264".into(),
+                };
             }
             if !ff.has_encoder("aac") {
-                return EngineStatus { ok: false, detail: "FFmpeg tidak punya encoder AAC".into() };
+                return EngineStatus {
+                    ok: false,
+                    detail: "FFmpeg tidak punya encoder AAC".into(),
+                };
             }
-            EngineStatus { ok: true, detail: "siap".into() }
+            EngineStatus {
+                ok: true,
+                detail: "siap".into(),
+            }
         }
-        Err(e) => EngineStatus { ok: false, detail: e },
+        Err(e) => EngineStatus {
+            ok: false,
+            detail: e,
+        },
     }
 }
 
@@ -108,13 +120,10 @@ async fn inspect_machine() -> Result<MachineReport, String> {
         .map_err(|e| e.to_string())
 }
 
-
-
 #[tauri::command]
 fn load_config() -> Config {
     Config::load()
 }
-
 
 #[tauri::command]
 fn save_config(config: Config) -> Result<Config, String> {
@@ -124,7 +133,10 @@ fn save_config(config: Config) -> Result<Config, String> {
 
 /// Unduh dan pasang FFmpeg otomatis, lalu simpan lokasinya di konfigurasi.
 #[tauri::command]
-async fn install_ffmpeg(app: AppHandle, state: State<'_, Session>) -> Result<setup::InstallReport, String> {
+async fn install_ffmpeg(
+    app: AppHandle,
+    state: State<'_, Session>,
+) -> Result<setup::InstallReport, String> {
     if *state.setup_running.lock().unwrap() {
         return Err("pemasangan sedang berjalan".into());
     }
@@ -154,7 +166,9 @@ fn describe(path: String) -> Result<MediaSummary, String> {
     let ff = discover_ffmpeg()?;
     let info = probe::probe(&ff, &path).map_err(|e| e.to_string())?;
     let audible = if info.has_audio {
-        probe::audio_peak_dbfs(&ff, &path).map(|p| p > -50.0).unwrap_or(false)
+        probe::audio_peak_dbfs(&ff, &path)
+            .map(|p| p > -50.0)
+            .unwrap_or(false)
     } else {
         false
     };
@@ -169,7 +183,6 @@ fn describe(path: String) -> Result<MediaSummary, String> {
         channels: info.channels,
     })
 }
-
 
 #[derive(Serialize)]
 struct MergeSummary {
@@ -256,7 +269,10 @@ async fn merge_songs(
         let reporter = Arc::new(move |msg: &str, fraction: Option<f64>| {
             let _ = progress_app.emit(
                 "progress",
-                ProgressEvent { message: msg.to_string(), fraction },
+                ProgressEvent {
+                    message: msg.to_string(),
+                    fraction,
+                },
             );
         });
         let ctx = Ctx::with_progress(&work_dir, reporter, cancel).map_err(|e| e.to_string())?;
@@ -287,7 +303,11 @@ async fn merge_songs(
 }
 
 #[tauri::command]
-async fn render(app: AppHandle, state: State<'_, Session>, opts: RenderOptions) -> Result<RenderSummary, String> {
+async fn render(
+    app: AppHandle,
+    state: State<'_, Session>,
+    opts: RenderOptions,
+) -> Result<RenderSummary, String> {
     if *state.running.lock().unwrap() {
         return Err("masih ada render yang berjalan".into());
     }
@@ -305,7 +325,10 @@ async fn render(app: AppHandle, state: State<'_, Session>, opts: RenderOptions) 
         let reporter = Arc::new(move |msg: &str, fraction: Option<f64>| {
             let _ = progress_app.emit(
                 "progress",
-                ProgressEvent { message: msg.to_string(), fraction },
+                ProgressEvent {
+                    message: msg.to_string(),
+                    fraction,
+                },
             );
         });
 
@@ -320,7 +343,11 @@ async fn render(app: AppHandle, state: State<'_, Session>, opts: RenderOptions) 
     let _ = app.emit(
         "progress",
         ProgressEvent {
-            message: if result.is_ok() { "selesai".into() } else { "berhenti".into() },
+            message: if result.is_ok() {
+                "selesai".into()
+            } else {
+                "berhenti".into()
+            },
             fraction: None,
         },
     );

@@ -110,7 +110,9 @@ pub fn probe(ff: &Ffmpeg, path: &str) -> Result<MediaInfo> {
     }
 
     if !info.has_video && !info.has_audio {
-        return Err(Error::Probe(format!("{path} tidak punya stream audio maupun video")));
+        return Err(Error::Probe(format!(
+            "{path} tidak punya stream audio maupun video"
+        )));
     }
     if info.duration_s <= 0.0 {
         return Err(Error::Probe(format!("durasi {path} tidak terbaca")));
@@ -147,8 +149,14 @@ pub fn audio_peak_dbfs(ff: &Ffmpeg, path: &str) -> Result<f64> {
 
 fn parse_fraction(text: &str) -> f64 {
     let mut parts = text.split('/');
-    let num = parts.next().and_then(|n| n.parse::<f64>().ok()).unwrap_or(0.0);
-    let den = parts.next().and_then(|n| n.parse::<f64>().ok()).unwrap_or(1.0);
+    let num = parts
+        .next()
+        .and_then(|n| n.parse::<f64>().ok())
+        .unwrap_or(0.0);
+    let den = parts
+        .next()
+        .and_then(|n| n.parse::<f64>().ok())
+        .unwrap_or(1.0);
     if den == 0.0 {
         0.0
     } else {

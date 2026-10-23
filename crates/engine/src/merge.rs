@@ -31,14 +31,31 @@ pub struct AudioFormat {
 impl AudioFormat {
     /// Format paling umum, dipakai kalau tidak ada lagu yang memberi petunjuk lain.
     pub fn default_format() -> Self {
-        Self { sample_rate: 44100, channels: 2 }
+        Self {
+            sample_rate: 44100,
+            channels: 2,
+        }
     }
 
     /// Pilih format dari lagu dengan sample rate tertinggi, supaya tidak ada yang diturunkan.
     pub fn from_sources(rates: &[u32], channels: &[u32]) -> Self {
-        let sample_rate = rates.iter().copied().filter(|r| *r > 0).max().unwrap_or(44100);
-        let channels = channels.iter().copied().filter(|c| *c > 0).max().unwrap_or(2).min(2);
-        Self { sample_rate, channels }
+        let sample_rate = rates
+            .iter()
+            .copied()
+            .filter(|r| *r > 0)
+            .max()
+            .unwrap_or(44100);
+        let channels = channels
+            .iter()
+            .copied()
+            .filter(|c| *c > 0)
+            .max()
+            .unwrap_or(2)
+            .min(2);
+        Self {
+            sample_rate,
+            channels,
+        }
     }
 }
 
@@ -107,7 +124,9 @@ pub fn plan(durations: &[f64], crossfade_s: f64) -> Result<(f64, f64)> {
         return Err(Error::Invalid("daftar lagu kosong".into()));
     }
     if durations.iter().any(|d| *d <= 0.0) {
-        return Err(Error::Invalid("ada lagu dengan durasi tidak terbaca".into()));
+        return Err(Error::Invalid(
+            "ada lagu dengan durasi tidak terbaca".into(),
+        ));
     }
     let count = durations.len();
     let xfade = crossfade_s.max(0.0);
@@ -118,7 +137,11 @@ pub fn plan(durations: &[f64], crossfade_s: f64) -> Result<(f64, f64)> {
     let xfade = xfade.min(shortest / 4.0).max(0.0);
 
     let total: f64 = durations.iter().sum();
-    let overlap = if count > 1 { xfade * (count - 1) as f64 } else { 0.0 };
+    let overlap = if count > 1 {
+        xfade * (count - 1) as f64
+    } else {
+        0.0
+    };
     Ok((total - overlap, overlap))
 }
 
@@ -126,7 +149,9 @@ pub fn plan(durations: &[f64], crossfade_s: f64) -> Result<(f64, f64)> {
 pub fn merge(ctx: &Ctx, ff: &Ffmpeg, opts: &MergeOptions) -> Result<MergeReport> {
     let started = std::time::Instant::now();
     if opts.tracks.len() < 2 {
-        return Err(Error::Invalid("butuh minimal dua lagu untuk digabung".into()));
+        return Err(Error::Invalid(
+            "butuh minimal dua lagu untuk digabung".into(),
+        ));
     }
 
     // 1. Tentukan panjang dan format tiap lagu.
@@ -216,7 +241,11 @@ pub fn merge(ctx: &Ctx, ff: &Ffmpeg, opts: &MergeOptions) -> Result<MergeReport>
         let minutes = track.duration_s / 60.0;
 
         ctx.step_at(
-            &format!("menyiapkan lagu {}/{}: {label} ({minutes:.1} menit)", i + 1, total),
+            &format!(
+                "menyiapkan lagu {}/{}: {label} ({minutes:.1} menit)",
+                i + 1,
+                total
+            ),
             base,
         );
 
@@ -262,7 +291,17 @@ pub fn merge(ctx: &Ctx, ff: &Ffmpeg, opts: &MergeOptions) -> Result<MergeReport>
     // masukan putaran berikutnya. Dengan cara ini kemajuan bisa dilaporkan sepanjang proses
     // dan ukuran satu perintah ffmpeg tetap terbatas walau lagunya ratusan.
     let unit_seconds: Vec<f64> = tracks.iter().map(|t| t.duration_s).collect();
-    run_staged(ctx, ff, &normalized_paths, &unit_seconds, &output, xfade, format, &opts.bitrate, planned_s)?;
+    run_staged(
+        ctx,
+        ff,
+        &normalized_paths,
+        &unit_seconds,
+        &output,
+        xfade,
+        format,
+        &opts.bitrate,
+        planned_s,
+    )?;
 
     let size = std::fs::metadata(&output)?.len();
     let out_info = crate::probe::probe(ff, &opts.output)?;
@@ -291,7 +330,6 @@ pub fn merge(ctx: &Ctx, ff: &Ffmpeg, opts: &MergeOptions) -> Result<MergeReport>
         elapsed_s: started.elapsed().as_secs_f64(),
     })
 }
-
 
 /// Hitung gain yang perlu diterapkan ke satu lagu supaya tingkat kekerasannya mendekati target.
 ///
@@ -341,7 +379,6 @@ fn parse_db(text: &str, key: &str) -> Option<f64> {
     rest.split_whitespace().next()?.parse::<f64>().ok()
 }
 
-
 /// Gabungkan semua lagu secara bertahap sambil melaporkan kemajuan nyata.
 ///
 /// Setiap putaran menggabungkan beberapa berkas menjadi satu. Jumlah masukan per putaran
@@ -377,7 +414,10 @@ fn run_staged(
     }
 
     let groups: Vec<Vec<PathBuf>> = inputs.chunks(PER_GROUP).map(|c| c.to_vec()).collect();
-    let seconds_groups: Vec<Vec<f64>> = input_seconds.chunks(PER_GROUP).map(|c| c.to_vec()).collect();
+    let seconds_groups: Vec<Vec<f64>> = input_seconds
+        .chunks(PER_GROUP)
+        .map(|c| c.to_vec())
+        .collect();
     let group_count = groups.len();
 
     let mut pieces: Vec<PathBuf> = Vec::new();
@@ -396,7 +436,10 @@ fn run_staged(
         let label = format!("kelompok {} dari {group_count}", index + 1);
         let reporter = move |fraction: f64| {
             progress_ctx.step_at(
-                &format!("{label}: menggabungkan {count} lagu, {:.0}%", fraction * 100.0),
+                &format!(
+                    "{label}: menggabungkan {count} lagu, {:.0}%",
+                    fraction * 100.0
+                ),
                 base + span * fraction,
             );
         };
@@ -409,9 +452,7 @@ fn run_staged(
 
     // Tahap penyatuan akhir.
     let total = merge_length(&piece_seconds, xfade);
-    let args = build_merge_args(
-            ff,
-            &pieces, output, xfade, format, bitrate, total);
+    let args = build_merge_args(ff, &pieces, output, xfade, format, bitrate, total);
     let progress_ctx = ctx.clone();
     let count = pieces.len();
     let reporter = move |fraction: f64| {
@@ -623,11 +664,16 @@ mod tests {
     fn staged_total_matches_direct_total() {
         // Hasil bertahap harus sama panjang dengan sekali jalan, inilah yang pernah salah
         // karena batas -t dibagi rata padahal lagunya tidak sama panjang.
-        let d = [50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0, 95.0, 100.0, 105.0];
+        let d = [
+            50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0, 95.0, 100.0, 105.0,
+        ];
         let direct = merge_length(&d, 4.0);
         let round1: Vec<f64> = d.chunks(4).map(|g| merge_length(g, 4.0)).collect();
         let staged = merge_length(&round1, 4.0);
-        assert!((direct - staged).abs() < 1e-9, "langsung {direct} vs bertahap {staged}");
+        assert!(
+            (direct - staged).abs() < 1e-9,
+            "langsung {direct} vs bertahap {staged}"
+        );
     }
 
     #[test]
@@ -652,7 +698,13 @@ mod tests {
         let inputs: Vec<PathBuf> = (0..3).map(|i| PathBuf::from(format!("t{i}.wav"))).collect();
         let args = build_merge_args(
             &Ffmpeg::for_test(),
-            &inputs, Path::new("out.m4a"), 3.0, AudioFormat::default_format(), "192k", 100.0);
+            &inputs,
+            Path::new("out.m4a"),
+            3.0,
+            AudioFormat::default_format(),
+            "192k",
+            100.0,
+        );
         let filter = args[args.iter().position(|a| a == "-filter_complex").unwrap() + 1].clone();
         assert_eq!(filter.matches("acrossfade").count(), 2);
         assert!(filter.ends_with("[mix]"));
@@ -661,10 +713,18 @@ mod tests {
 
     #[test]
     fn merge_without_crossfade_uses_concat() {
-        let inputs: Vec<PathBuf> = (0..10).map(|i| PathBuf::from(format!("t{i}.wav"))).collect();
+        let inputs: Vec<PathBuf> = (0..10)
+            .map(|i| PathBuf::from(format!("t{i}.wav")))
+            .collect();
         let args = build_merge_args(
             &Ffmpeg::for_test(),
-            &inputs, Path::new("out.m4a"), 0.0, AudioFormat::default_format(), "192k", 100.0);
+            &inputs,
+            Path::new("out.m4a"),
+            0.0,
+            AudioFormat::default_format(),
+            "192k",
+            100.0,
+        );
         let filter = args[args.iter().position(|a| a == "-filter_complex").unwrap() + 1].clone();
         assert!(filter.contains("concat=n=10"));
         assert!(!filter.contains("acrossfade"));

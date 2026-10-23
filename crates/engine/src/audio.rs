@@ -86,7 +86,9 @@ impl AudioPlan {
 /// Hitung rencana audio dari panjang lagu dan durasi target.
 pub fn plan(source_s: f64, target_s: f64, crossfade_s: f64, fade_out_s: f64) -> Result<AudioPlan> {
     if source_s <= 0.0 || target_s <= 0.0 {
-        return Err(Error::Invalid("durasi audio dan target harus lebih dari 0".into()));
+        return Err(Error::Invalid(
+            "durasi audio dan target harus lebih dari 0".into(),
+        ));
     }
 
     // Crossfade tidak boleh memakan lebih dari seperempat lagu, dan selalu ada isi di tengah.
@@ -136,7 +138,9 @@ pub fn build_unit(
     channels: u32,
 ) -> Result<AudioUnit> {
     if xfade_s <= 0.0 {
-        return Err(Error::Invalid("crossfade audio harus lebih dari 0 detik".into()));
+        return Err(Error::Invalid(
+            "crossfade audio harus lebih dari 0 detik".into(),
+        ));
     }
     if xfade_s * 2.0 >= source_s {
         return Err(Error::Invalid(format!(
@@ -242,7 +246,10 @@ pub fn normalize_unit(
         "menyamakan volume audio ke sekitar {target_lufs} LUFS (geser {gain:+.1} dB)"
     ));
     ff.run(&args, "normalisasi audio")?;
-    Ok(AudioUnit { path: out, ..unit.clone() })
+    Ok(AudioUnit {
+        path: out,
+        ..unit.clone()
+    })
 }
 
 /// Encode unit audio ke AAC dan potong salinan yang bersih.
@@ -389,7 +396,11 @@ pub fn assemble(
             .map(|n| n.to_string_lossy().replace('\'', "'\\''"))
             .unwrap_or_default()
     };
-    let list = format!("file '{}'\nfile '{}'\n", file_name(&body_path), file_name(&tail_path));
+    let list = format!(
+        "file '{}'\nfile '{}'\n",
+        file_name(&body_path),
+        file_name(&tail_path)
+    );
     std::fs::write(&list_path, list)?;
 
     let concat_args: Vec<String> = vec![

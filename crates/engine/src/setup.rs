@@ -78,8 +78,9 @@ where
     std::fs::create_dir_all(&extract_dir)?;
     extract_zip(&zip_path, &extract_dir)?;
 
-    let found = find_ffmpeg_dir(&extract_dir)
-        .ok_or_else(|| Error::Invalid("ffmpeg.exe tidak ditemukan di dalam berkas unduhan".into()))?;
+    let found = find_ffmpeg_dir(&extract_dir).ok_or_else(|| {
+        Error::Invalid("ffmpeg.exe tidak ditemukan di dalam berkas unduhan".into())
+    })?;
 
     // Pindahkan ke folder akhir supaya lokasinya stabil.
     let final_dir = dir.join("bin");
@@ -97,11 +98,15 @@ where
     let _ = std::fs::remove_dir_all(&extract_dir);
 
     if !has_ffmpeg(&final_dir) {
-        return Err(Error::Invalid("pemasangan gagal: ffmpeg.exe tidak ada di folder tujuan".into()));
+        return Err(Error::Invalid(
+            "pemasangan gagal: ffmpeg.exe tidak ada di folder tujuan".into(),
+        ));
     }
 
     let version = read_version(&final_dir).unwrap_or_else(|| "tidak terbaca".into());
-    let size = std::fs::metadata(final_dir.join(exe_name("ffmpeg"))).map(|m| m.len()).unwrap_or(0);
+    let size = std::fs::metadata(final_dir.join(exe_name("ffmpeg")))
+        .map(|m| m.len())
+        .unwrap_or(0);
 
     progress(DownloadProgress {
         phase: "selesai".into(),
@@ -197,7 +202,9 @@ fn sha256_file(path: &Path) -> Result<String> {
         .output()
         .map_err(|e| Error::Invalid(format!("gagal menghitung hash: {e}")))?;
     if !out.status.success() {
-        return Err(Error::Invalid("gagal menghitung SHA256 berkas unduhan".into()));
+        return Err(Error::Invalid(
+            "gagal menghitung SHA256 berkas unduhan".into(),
+        ));
     }
     Ok(String::from_utf8_lossy(&out.stdout).trim().to_lowercase())
 }
@@ -247,7 +254,10 @@ fn find_ffmpeg_dir(root: &Path) -> Option<PathBuf> {
 
 fn read_version(dir: &Path) -> Option<String> {
     let exe = dir.join(exe_name("ffmpeg"));
-    let out = std::process::Command::new(exe).arg("-version").output().ok()?;
+    let out = std::process::Command::new(exe)
+        .arg("-version")
+        .output()
+        .ok()?;
     let text = String::from_utf8_lossy(&out.stdout);
     text.lines().next().map(|l| l.trim().to_string())
 }

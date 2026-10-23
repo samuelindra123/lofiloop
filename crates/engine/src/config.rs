@@ -123,8 +123,16 @@ pub fn resolve_ffmpeg_dir(config_dir: Option<&str>) -> Option<PathBuf> {
 }
 
 pub fn has_ffmpeg(dir: &Path) -> bool {
-    let ffmpeg = dir.join(if cfg!(windows) { "ffmpeg.exe" } else { "ffmpeg" });
-    let ffprobe = dir.join(if cfg!(windows) { "ffprobe.exe" } else { "ffprobe" });
+    let ffmpeg = dir.join(if cfg!(windows) {
+        "ffmpeg.exe"
+    } else {
+        "ffmpeg"
+    });
+    let ffprobe = dir.join(if cfg!(windows) {
+        "ffprobe.exe"
+    } else {
+        "ffprobe"
+    });
     ffmpeg.is_file() && ffprobe.is_file()
 }
 

@@ -42,7 +42,9 @@ pub fn build_unit(
         return Err(Error::Invalid("fps sumber tidak terbaca".into()));
     }
     if length_s <= 0.0 {
-        return Err(Error::Invalid("panjang unit harus lebih dari 0 detik".into()));
+        return Err(Error::Invalid(
+            "panjang unit harus lebih dari 0 detik".into(),
+        ));
     }
 
     let fps = source.fps;
@@ -50,7 +52,9 @@ pub fn build_unit(
     let xfade_frames = (xfade_s * fps).round() as u64;
 
     if xfade_frames == 0 {
-        return Err(Error::Invalid("crossfade terlalu pendek untuk fps ini".into()));
+        return Err(Error::Invalid(
+            "crossfade terlalu pendek untuk fps ini".into(),
+        ));
     }
     if xfade_frames * 2 >= total_frames {
         return Err(Error::Invalid(format!(
@@ -122,7 +126,8 @@ pub fn build_unit(
 
     ctx.step(&format!(
         "membangun unit video: {total_frames} frame ({:.2} dtk), crossfade {} frame",
-        total_frames as f64 / fps, xfade_frames
+        total_frames as f64 / fps,
+        xfade_frames
     ));
     ff.run(&args, "unit video")?;
 
@@ -155,7 +160,9 @@ pub fn count_frames(ff: &Ffmpeg, path: &str) -> Result<u64> {
         path.into(),
     ];
     let out = ff.probe_text(&args)?;
-    out.trim()
-        .parse::<u64>()
-        .map_err(|_| Error::Probe(format!("jumlah frame {path} tidak terbaca (keluaran: {out:?})")))
+    out.trim().parse::<u64>().map_err(|_| {
+        Error::Probe(format!(
+            "jumlah frame {path} tidak terbaca (keluaran: {out:?})"
+        ))
+    })
 }

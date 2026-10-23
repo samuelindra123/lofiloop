@@ -147,7 +147,10 @@ pub fn render(ctx: &Ctx, opts: &RenderOptions, ffmpeg_dir: Option<&str>) -> Resu
 
     let video_info = probe::probe(&ff, &opts.video)?;
     if !video_info.has_video {
-        return Err(Error::Invalid(format!("{} tidak punya stream video", opts.video)));
+        return Err(Error::Invalid(format!(
+            "{} tidak punya stream video",
+            opts.video
+        )));
     }
 
     // Deteksi suara di video: dipakai untuk memutuskan kebijakan audio.
@@ -279,10 +282,12 @@ pub fn render(ctx: &Ctx, opts: &RenderOptions, ffmpeg_dir: Option<&str>) -> Resu
             )?;
             if let Some(lufs) = opts.target_lufs {
                 ctx.check_cancel()?;
-                unit_audio = audio::normalize_unit(ctx, &ff, &unit_audio, ctx.work_dir(), lufs, -1.0)?;
+                unit_audio =
+                    audio::normalize_unit(ctx, &ff, &unit_audio, ctx.work_dir(), lufs, -1.0)?;
             }
             ctx.check_cancel()?;
-            let encoded = audio::encode_unit(ctx, &ff, &unit_audio, ctx.work_dir(), &opts.bitrate_audio)?;
+            let encoded =
+                audio::encode_unit(ctx, &ff, &unit_audio, ctx.work_dir(), &opts.bitrate_audio)?;
 
             ctx.check_cancel()?;
             let final_audio = audio::assemble(
@@ -314,7 +319,15 @@ pub fn render(ctx: &Ctx, opts: &RenderOptions, ffmpeg_dir: Option<&str>) -> Resu
             std::fs::create_dir_all(parent)?;
         }
     }
-    mux(ctx, &ff, &video_info, &looped_video, &extras, &opts.output, opts.duration_s)?;
+    mux(
+        ctx,
+        &ff,
+        &video_info,
+        &looped_video,
+        &extras,
+        &opts.output,
+        opts.duration_s,
+    )?;
 
     let out_info = probe::probe(&ff, &opts.output)?;
     let size = std::fs::metadata(&opts.output)?.len();

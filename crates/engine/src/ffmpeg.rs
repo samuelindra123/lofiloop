@@ -163,7 +163,6 @@ impl Ffmpeg {
         Ok(String::from_utf8_lossy(&out.stderr).into_owned())
     }
 
-
     /// Jalankan ffmpeg sambil melaporkan kemajuan nyata dari dalam proses.
     ///
     /// Memakai `-progress pipe:1` sehingga ffmpeg sendiri yang memberi tahu sudah sampai
@@ -240,7 +239,11 @@ impl Ffmpeg {
                 // Kalau ffmpeg lama diam, majukan sendiri berdasarkan waktu berjalan
                 // sebagai perkiraan sementara, tidak pernah melebihi batas tahap ini.
                 let elapsed = started.elapsed().as_secs_f64();
-                let by_time = if expected_s > 0.0 { elapsed / expected_s } else { 0.0 };
+                let by_time = if expected_s > 0.0 {
+                    elapsed / expected_s
+                } else {
+                    0.0
+                };
                 let fraction = (last_seen / expected_s).max(by_time * 0.5).clamp(0.0, 1.0);
                 let value = base + span * fraction;
                 if value - last_value >= 0.01 {

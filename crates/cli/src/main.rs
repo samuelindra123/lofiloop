@@ -58,7 +58,6 @@ Gabung banyak lagu menjadi satu (tanpa video):
   --merge-no-normalize    jangan samakan volume antar lagu
 ";
 
-
 /// Jalankan mode gabung lagu. Dipisah supaya alur render tetap sederhana.
 /// Jalankan mode gabung lagu. Dipisah supaya alur render tetap sederhana.
 fn run_merge(args: &[String], merge_at: usize) -> std::result::Result<(), String> {
@@ -149,7 +148,10 @@ fn run_merge(args: &[String], merge_at: usize) -> std::result::Result<(), String
     println!("== selesai ==");
     println!("berkas        : {}", report.output);
     println!("jumlah lagu   : {}", report.track_count);
-    println!("ukuran        : {:.0} MB", report.size_bytes as f64 / 1_048_576.0);
+    println!(
+        "ukuran        : {:.0} MB",
+        report.size_bytes as f64 / 1_048_576.0
+    );
     println!(
         "durasi hasil  : {:.1} menit (dari {:.1} menit materi)",
         report.duration_s / 60.0,
@@ -163,8 +165,14 @@ fn run_merge(args: &[String], merge_at: usize) -> std::result::Result<(), String
             report.crossfade_s
         );
     }
-    println!("format        : {} Hz, {} kanal", report.sample_rate, report.channels);
-    println!("normalisasi   : {}", if report.normalized { "ya" } else { "tidak" });
+    println!(
+        "format        : {} Hz, {} kanal",
+        report.sample_rate, report.channels
+    );
+    println!(
+        "normalisasi   : {}",
+        if report.normalized { "ya" } else { "tidak" }
+    );
     println!("waktu proses  : {:.1} dtk", report.elapsed_s);
     Ok(())
 }
@@ -185,7 +193,6 @@ fn run() -> std::result::Result<(), String> {
         print!("{USAGE}");
         return Ok(());
     }
-
 
     // Mode gabung lagu: dipilih kalau --merge diberikan.
     if let Some(position) = args.iter().position(|a| a == "--merge") {
@@ -249,7 +256,9 @@ fn run() -> std::result::Result<(), String> {
 
     if let Some(lufs) = opts.target_lufs {
         if !(-40.0..=-5.0).contains(&lufs) {
-            return Err(format!("--lufs {lufs} di luar rentang wajar (-40 sampai -5)"));
+            return Err(format!(
+                "--lufs {lufs} di luar rentang wajar (-40 sampai -5)"
+            ));
         }
     }
     if opts.video_xfade_s <= 0.0 || opts.audio_xfade_s <= 0.0 {
@@ -270,8 +279,14 @@ fn run() -> std::result::Result<(), String> {
     println!();
     println!("== selesai ==");
     println!("berkas          : {}", report.output);
-    println!("ukuran          : {:.0} MB", report.size_bytes as f64 / 1_048_576.0);
-    println!("durasi video    : {:.3} dtk ({} x unit {:.3} dtk)", report.duration_video_s, report.video_repeats, report.video_unit_s);
+    println!(
+        "ukuran          : {:.0} MB",
+        report.size_bytes as f64 / 1_048_576.0
+    );
+    println!(
+        "durasi video    : {:.3} dtk ({} x unit {:.3} dtk)",
+        report.duration_video_s, report.video_repeats, report.video_unit_s
+    );
     if let Some(a) = report.duration_audio_s {
         println!("durasi audio    : {a:.3} dtk");
     }
@@ -279,7 +294,10 @@ fn run() -> std::result::Result<(), String> {
         println!("selisih A/V     : {:.3} dtk", d);
     }
     if let Some(u) = report.audio_unit_s {
-        println!("unit audio      : {u:.3} dtk ({} x)", report.audio_repeats.unwrap_or(0));
+        println!(
+            "unit audio      : {u:.3} dtk ({} x)",
+            report.audio_repeats.unwrap_or(0)
+        );
     }
     println!("kebijakan audio : {}", report.policy_note);
     println!("waktu proses    : {:.1} dtk", report.elapsed_s);
@@ -332,7 +350,9 @@ fn parse_duration(text: &str) -> std::result::Result<f64, String> {
         };
     }
     if !num.is_empty() {
-        return Err(format!("durasi '{text}' harus diakhiri satuan s, m, atau h"));
+        return Err(format!(
+            "durasi '{text}' harus diakhiri satuan s, m, atau h"
+        ));
     }
     if total <= 0.0 {
         return Err(format!("durasi '{text}' harus lebih dari 0"));
@@ -362,7 +382,10 @@ fn check_deps() -> std::result::Result<(), String> {
     if !ff.has_encoder("aac") {
         return Err("encoder aac tidak tersedia".into());
     }
-    println!("encoder video yang tersedia: {}", ff.available_video_encoder().name());
+    println!(
+        "encoder video yang tersedia: {}",
+        ff.available_video_encoder().name()
+    );
     println!(
         "encoder video yang dipakai  : {} (default; pakai --encoder hardware untuk QSV)",
         lofiloop_engine::ffmpeg::VideoEncoder::X264.name()
