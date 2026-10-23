@@ -254,10 +254,7 @@ fn find_ffmpeg_dir(root: &Path) -> Option<PathBuf> {
 
 fn read_version(dir: &Path) -> Option<String> {
     let exe = dir.join(exe_name("ffmpeg"));
-    let out = crate::proc::command(Path::new(exe))
-        .arg("-version")
-        .output()
-        .ok()?;
+    let out = crate::proc::command(&exe).arg("-version").output().ok()?;
     let text = String::from_utf8_lossy(&out.stdout);
     text.lines().next().map(|l| l.trim().to_string())
 }
