@@ -33,6 +33,14 @@ bisa menangkap sambungan yang kasar, jadi ini yang memastikan:
 python scripts/verify_output.py work/hasil.mp4
 ```
 
+Untuk situs di `website/`, ujinya dijalankan dari folder itu dan memeriksa hasil build:
+
+```bash
+cd website
+pnpm install
+pnpm uji
+```
+
 ## Aturan yang dipegang proyek ini
 
 **Logika ada di `crates/engine`, bukan di UI.** UI hanya memanggil. Kalau kamu menambahkan

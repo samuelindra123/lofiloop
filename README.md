@@ -315,6 +315,7 @@ app/ui/           tampilan Svelte 5 (dua halaman: loop video, gabung lagu)
 scripts/          build, installer, gerbang dependensi, pemeriksa hasil
 docs/             catatan pengukuran dan laporan lingkungan
 .github/workflows/ uji otomatis dan penerbitan rilis
+website/          situs statis Astro: penjelasan, panduan, dan halaman rilis
 ```
 
 Logika seluruhnya ada di `crates/engine`, terpisah dari UI. UI hanya memanggil, dan CLI memakai
