@@ -3,6 +3,11 @@
 # Keduanya perlu: esbuild memasang biner platformnya, dan sharp memasang pustaka gambar
 # untuk mengolah berkas. Selain dua ini, paket lain tidak diberi izin, karena menjalankan
 # skrip pemasangan dari paket yang tidak dikenal adalah cara penyebaran yang umum.
-onlyBuiltDependencies:
-  - esbuild
-  - sharp
+#
+# Kuncinya `allowBuilds`, bukan `onlyBuiltDependencies`. Kunci lama itu tidak lagi dibaca
+# oleh pnpm 12, dan akibatnya bukan sekadar peringatan: instalasi berhenti dengan
+# ERR_PNPM_IGNORED_BUILDS, termasuk di Vercel. Nilai `true` berarti diizinkan; kalau
+# suatu saat ada paket yang harus ditolak, tulis `false`.
+allowBuilds:
+  esbuild: true
+  sharp: true
