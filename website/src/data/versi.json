@@ -1,0 +1,243 @@
+{
+  "dibuat_pada": "2026-10-23T14:04:59.939Z",
+  "sumber": "changelog+github",
+  "terbaru": "0.2.3",
+  "versi": [
+    {
+      "versi": "0.2.3",
+      "tag": "v0.2.3",
+      "tanggal": "2026-10-23",
+      "bagian": [
+        {
+          "nama": "Diperbaiki",
+          "isi": [
+            "**Panjang loop memakai seluruh video, bukan sebagian.** Pada pilihan 60 fps, klip 10 detik dilaporkan berbatas 4 detik sehingga videonya terpotong, bukan diulang, melainkan dipangkas. Penyebabnya batas dihitung dari frame sumber lalu dibagi fps keluaran. Perubahan fps dipasang sebelum pemotongan frame, jadi aliran yang dipotong tetap sepanjang durasi klip: 10 detik pada 24 fps maupun 60 fps. Batas sekarang adalah durasi klip itu sendiri, dan tidak lagi berubah karena fps keluaran.",
+            "Batas penggeser dibulatkan ke atas ke setengah detik. Sebelumnya dibulatkan ke bawah, sehingga klip 10,01 detik berhenti di 10 detik dan seluruh video tidak pernah bisa dipakai.",
+            "Keterangan pada pilihan fps tidak lagi menyatakan bahwa fps memengaruhi panjang loop."
+          ]
+        },
+        {
+          "nama": "Catatan",
+          "isi": [
+            "Fps, resolusi, dan bitrate tetap bisa dipilih bebas. Pilihan di atas fps sumber tetap diizinkan, disertai keterangan bahwa frame-nya digandakan sehingga berkas lebih besar tanpa gerakan yang lebih halus."
+          ]
+        }
+      ],
+      "tautan_rilis": "https://github.com/samuelindra123/lofiloop/releases/tag/v0.2.3",
+      "berkas": [
+        {
+          "nama": "LofiLoop-0.2.3-portable.zip",
+          "ukuran": 81623471,
+          "tautan": "https://github.com/samuelindra123/lofiloop/releases/download/v0.2.3/LofiLoop-0.2.3-portable.zip"
+        },
+        {
+          "nama": "LofiLoop-Setup-0.2.3.exe",
+          "ukuran": 59175565,
+          "tautan": "https://github.com/samuelindra123/lofiloop/releases/download/v0.2.3/LofiLoop-Setup-0.2.3.exe"
+        }
+      ]
+    },
+    {
+      "versi": "0.2.2",
+      "tag": "v0.2.2",
+      "tanggal": "2026-10-23",
+      "bagian": [
+        {
+          "nama": "Diperbaiki",
+          "isi": [
+            "**Panjang loop tidak lagi salah dihitung saat fps keluaran dinaikkan.** Sebelumnya batas dihitung dari fps keluaran, sehingga klip 10 detik pada 24 fps dilaporkan berbatas 10 detik saat dipilih 60 fps, padahal frame yang tersedia tetap 240, yaitu isi 10 detik pada 24 fps. Akibatnya pesan galat menyarankan panjang yang sama dengan yang baru saja ditolak. Batas sekarang dihitung dari frame nyata klip pada fps sumber.",
+            "Pesan galat menyebut fps sumber dan menjelaskan bahwa menaikkan fps keluaran di atas fps sumber tidak menambah panjang loop yang bisa dibuat.",
+            "Nilai batas yang ditampilkan selalu diterima kembali saat dikirim, tanpa terpengaruh pembulatan frame di kedua sisi."
+          ]
+        },
+        {
+          "nama": "Diubah",
+          "isi": [
+            "**Pemeriksaan pembaruan tidak lagi memanggil GitHub setiap kali aplikasi dibuka.** Hasilnya disimpan dan dipakai ulang selama 24 jam. Tanpa jeda itu, membuka-tutup aplikasi berulang kali bisa menghabiskan jatah permintaan per alamat IP dari GitHub, dan setelah terlampaui seluruh permintaan dari alamat yang sama akan ditolak.",
+            "**Tombol \"Periksa pembaruan\"** di bilah judul, untuk memeriksa tanpa membuka-tutup aplikasi.",
+            "Kegagalan pemeriksaan tidak lagi diam. Alasannya ditampilkan saat pemeriksaan diminta pengguna; pemeriksaan otomatis yang gagal tetap dibiarkan tanpa kabar.",
+            "Keterangan di bawah pilihan resolusi dan fps menjelaskan akibat tiap pilihan. Semua pilihan tetap bebas dipakai."
+          ]
+        }
+      ],
+      "tautan_rilis": "https://github.com/samuelindra123/lofiloop/releases/tag/v0.2.2",
+      "berkas": [
+        {
+          "nama": "LofiLoop-0.2.2-portable.zip",
+          "ukuran": 81626560,
+          "tautan": "https://github.com/samuelindra123/lofiloop/releases/download/v0.2.2/LofiLoop-0.2.2-portable.zip"
+        },
+        {
+          "nama": "LofiLoop-Setup-0.2.2.exe",
+          "ukuran": 59170812,
+          "tautan": "https://github.com/samuelindra123/lofiloop/releases/download/v0.2.2/LofiLoop-Setup-0.2.2.exe"
+        }
+      ]
+    },
+    {
+      "versi": "0.2.1",
+      "tag": "v0.2.1",
+      "tanggal": "2026-10-23",
+      "bagian": [
+        {
+          "nama": "Diperbaiki",
+          "isi": [
+            "**Panjang loop yang tidak muat dicegah sebelum render, bukan ditolak setelahnya.** Sebelumnya penggeser bisa mengirim nilai yang melebihi kemampuan klip, dan render baru berhenti setelah pekerjaan dikirim ke mesin. Nilai dari konfigurasi tersimpan juga ikut terbawa saat berkas video diganti, sehingga penggeser bisa berisi angka dari sesi lain. Sekarang batasnya dihitung mesin dari fps dan jumlah frame yang sebenarnya, penggeser dikunci ke batas itu, dan peringatan muncul di bawah penggeser sebelum apa pun dijalankan.",
+            "**Pesan galat memakai satuan detik, bukan jumlah frame.** Antarmuka tidak pernah menampilkan frame, jadi angka frame tidak bisa dicocokkan dengan apa pun yang terlihat. Pesannya kini menyebut durasi klip, fps, panjang yang diminta, dan angka yang muat.",
+            "**Folder kerja kosong tidak lagi ditinggalkan setelah pekerjaan gagal.** Folder yang berisi berkas antara tetap disimpan untuk diperiksa; folder yang kosong dihapus, karena tidak memberi petunjuk apa pun tentang penyebab kegagalan."
+          ]
+        },
+        {
+          "nama": "Catatan",
+          "isi": [
+            "Klip 10 detik pada 24 fps hanya bisa menghasilkan satu putaran sampai 10 detik. Batas itu berasal dari susunan unit loop: ekor dan kepala diambil dari dalam klip yang sama, jadi klip harus menyediakan panjang putaran sekaligus bahan crossfade-nya."
+          ]
+        }
+      ],
+      "tautan_rilis": "https://github.com/samuelindra123/lofiloop/releases/tag/v0.2.1",
+      "berkas": [
+        {
+          "nama": "LofiLoop-0.2.1-portable.zip",
+          "ukuran": 81619884,
+          "tautan": "https://github.com/samuelindra123/lofiloop/releases/download/v0.2.1/LofiLoop-0.2.1-portable.zip"
+        },
+        {
+          "nama": "LofiLoop-Setup-0.2.1.exe",
+          "ukuran": 59173826,
+          "tautan": "https://github.com/samuelindra123/lofiloop/releases/download/v0.2.1/LofiLoop-Setup-0.2.1.exe"
+        }
+      ]
+    },
+    {
+      "versi": "0.2.0",
+      "tag": "v0.2.0",
+      "tanggal": "2026-10-23",
+      "bagian": [
+        {
+          "nama": "Ditambahkan",
+          "isi": [
+            "**Pengaturan resolusi, fps, dan bitrate** pada halaman loop video. Hasilnya bisa dibuat lebih kecil untuk menghemat ruang, atau lebih besar untuk kualitas. Lebar mengikuti rasio aspek sumber sehingga gambar tidak pernah gepeng. Perkiraan ukuran berkas ditampilkan sebelum render dijalankan.",
+            "**Penghitung waktu berjalan** di halaman loop video dan gabung lagu. Angkanya dihitung dari selisih waktu nyata, jadi tetap benar setelah jendela tidak aktif.",
+            "**Notifikasi pembaruan** di dalam aplikasi. Saat dibuka, LofiLoop memeriksa rilis terbaru di GitHub dan menampilkan tawaran unduh kalau ada versi yang lebih baru. Pemasangan tetap dilakukan pengguna; aplikasi tidak menimpa dirinya sendiri.",
+            "Laporan hasil kini menyertakan resolusi dan fps berkas keluaran, dibaca ulang dari berkasnya.",
+            "Opsi `--height` dan `--fps` pada CLI."
+          ]
+        },
+        {
+          "nama": "Diperbaiki",
+          "isi": [
+            "**Jendela konsol tidak lagi muncul** saat memproses. Aplikasi meluncurkan `ffmpeg`, `ffprobe`, dan `powershell` sebagai proses anak; di aplikasi tanpa konsol, Windows membuat jendela baru untuk masing-masingnya. Proses sekarang diluncurkan dengan penanda `CREATE_NO_WINDOW`, dan keluarannya tetap terbaca seperti sebelumnya."
+          ]
+        },
+        {
+          "nama": "Diubah",
+          "isi": [
+            "Komentar di seluruh kode ditulis ulang agar tenang dan menjelaskan alasan, bukan mencatat kejadian."
+          ]
+        },
+        {
+          "nama": "Catatan",
+          "isi": [
+            "Resolusi dan fps hanya mengubah bentuk keluaran. Keduanya dipasang sebagai filter sebelum pemotongan frame, dan angka fps yang sama dipakai untuk menghitung nomor frame serta opsi `-r`; kalau keduanya berbeda, panjang unit loop menjadi tidak sesuai rencana."
+          ]
+        }
+      ],
+      "tautan_rilis": "https://github.com/samuelindra123/lofiloop/releases/tag/v0.2.0",
+      "berkas": [
+        {
+          "nama": "LofiLoop-0.2.0-portable.zip",
+          "ukuran": 81616463,
+          "tautan": "https://github.com/samuelindra123/lofiloop/releases/download/v0.2.0/LofiLoop-0.2.0-portable.zip"
+        },
+        {
+          "nama": "LofiLoop-Setup-0.2.0.exe",
+          "ukuran": 59174643,
+          "tautan": "https://github.com/samuelindra123/lofiloop/releases/download/v0.2.0/LofiLoop-Setup-0.2.0.exe"
+        }
+      ]
+    },
+    {
+      "versi": "0.1.1",
+      "tag": "v0.1.1",
+      "tanggal": "2026-10-23",
+      "bagian": [
+        {
+          "nama": "Diperbaiki",
+          "isi": [
+            "**Folder kerja tidak lagi tertinggal setelah pekerjaan selesai.** Sebelumnya setiap render meninggalkan berkas antara di `<hasil>.work` di sebelah berkas hasil, sekitar 1, 2 GB per render, dan terus menumpuk. Sekarang folder itu dihapus setelah hasil jadi. Kalau pekerjaan gagal, isinya sengaja **disisakan** supaya bisa diperiksa.",
+            "Penghapusan folder kerja tidak pernah bisa menggagalkan pekerjaan yang sudah berhasil: berkas yang masih terkunci dibiarkan, dan hasil tetap dilaporkan sukses."
+          ]
+        },
+        {
+          "nama": "Diubah",
+          "isi": [
+            "**Seluruh build berjalan di GitHub Actions.** Setiap dorongan ke `main` menjalankan `cargo fmt`, `cargo clippy`, `cargo test`, dan build frontend. Tag `v*` menghasilkan installer dan versi portabel, lalu menerbitkan rilis secara otomatis. Tidak ada lagi langkah build yang perlu dijalankan di komputer pengembang."
+          ]
+        }
+      ],
+      "tautan_rilis": "https://github.com/samuelindra123/lofiloop/releases/tag/v0.1.1",
+      "berkas": [
+        {
+          "nama": "LofiLoop-0.1.1-portable.zip",
+          "ukuran": 81611121,
+          "tautan": "https://github.com/samuelindra123/lofiloop/releases/download/v0.1.1/LofiLoop-0.1.1-portable.zip"
+        },
+        {
+          "nama": "LofiLoop-Setup-0.1.1.exe",
+          "ukuran": 59171390,
+          "tautan": "https://github.com/samuelindra123/lofiloop/releases/download/v0.1.1/LofiLoop-Setup-0.1.1.exe"
+        }
+      ]
+    },
+    {
+      "versi": "0.1.0",
+      "tag": "v0.1.0",
+      "tanggal": "2026-10-23",
+      "bagian": [
+        {
+          "nama": "Ditambahkan",
+          "isi": [
+            "**Loop video**, mengulang klip pendek menjadi durasi berapa pun (1 jam sampai 8 jam) dengan crossfade antar putaran, lewat salinan stream sehingga tidak memproses ulang seluruh berkas.",
+            "**Audio pengganti**, suara video bisa diganti, dicampur, atau dipertahankan; audio disamakan otomatis ke -14 LUFS.",
+            "**Gabung banyak lagu**, menggabungkan berapa pun lagu menjadi satu berkas dengan transisi equal-power dan penyamaan volume antar lagu.",
+            "**Aplikasi desktop** (Tauri + Svelte 5) dengan dua halaman, plus wizard pemasangan FFmpeg yang mengunduh dan memverifikasi SHA256 sendiri.",
+            "**CLI** dengan seluruh kemampuan aplikasi, untuk pemakaian berulang dan pengujian.",
+            "**Installer Windows** yang menyertakan FFmpeg dan ffprobe sekaligus, plus versi portabel.",
+            "Skrip pengukuran sambungan audio dan video (`scripts/bench/`), serta pemeriksa hasil (`scripts/verify_output.py`)."
+          ]
+        },
+        {
+          "nama": "Catatan teknis",
+          "isi": [
+            "Pengulangan audio memakai salinan paket AAC alih-alih encode ulang: 1 jam audio dalam 4 detik, dibanding 427 detik kalau di-encode penuh.",
+            "Encoder AAC dipilih otomatis: `aac_mf` (MediaFoundation) kalau tersedia, karena terukur 49 detik untuk 30 menit audio dibanding 105 detik encoder bawaan ffmpeg.",
+            "Berkas antara saat menggabung lagu selalu PCM, supaya encode hanya terjadi sekali di akhir dan tidak berlipat untuk setiap tahap tambahan."
+          ]
+        },
+        {
+          "nama": "Terverifikasi",
+          "isi": [
+            "Video 1080p 1 jam: 104 detik, RAM puncak 29 MB.",
+            "Sambungan video: rasio 1,05 (batas 1,5; loop mentah 10,9).",
+            "Sambungan audio: kontinuitas 0,45, 0,82 (batas 1,2; loop mentah 10,5).",
+            "Gabung 2 lagu: 5,5 detik. Gabung 24 lagu: 72 detik.",
+            "Installer diuji: dipasang tanpa suara, aplikasi berjalan memakai FFmpeg bawaannya tanpa FFmpeg di PATH, lalu dicopot bersih termasuk registry."
+          ]
+        }
+      ],
+      "tautan_rilis": "https://github.com/samuelindra123/lofiloop/releases/tag/v0.1.0",
+      "berkas": [
+        {
+          "nama": "LofiLoop-0.1.0-portable.zip",
+          "ukuran": 79328236,
+          "tautan": "https://github.com/samuelindra123/lofiloop/releases/download/v0.1.0/LofiLoop-0.1.0-portable.zip"
+        },
+        {
+          "nama": "LofiLoop-Setup-0.1.0.exe",
+          "ukuran": 59158024,
+          "tautan": "https://github.com/samuelindra123/lofiloop/releases/download/v0.1.0/LofiLoop-Setup-0.1.0.exe"
+        }
+      ]
+    }
+  ]
+}

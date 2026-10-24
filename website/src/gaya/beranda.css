@@ -1,0 +1,405 @@
+/* ============================================================================
+   Gaya khusus beranda.
+   Terpisah dari dokumen.css karena bentuknya memang berbeda: beranda lapang dan
+   mengarahkan, halaman dokumen rapat dan terbaca.
+   ========================================================================= */
+
+/* ---------- Pembuka ---------- */
+
+/* Pembuka memakai tinggi yang lega dan satu titik fokus: judul. Semua yang lain
+   di bagian ini melayani judul itu, bukan bersaing dengannya. */
+.pembuka {
+  padding: var(--j9) 0 var(--j8);
+  border-bottom: 1px solid var(--garis);
+}
+
+.pembuka-dalam {
+  max-width: var(--lebar-situs);
+  margin: 0 auto;
+  padding: 0 var(--j5);
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: var(--j8);
+  align-items: center;
+}
+
+.pembuka h1 {
+  font-size: clamp(2.4rem, 5.2vw, 4rem);
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  margin-bottom: var(--j5);
+  max-width: 15ch;
+}
+
+.pembuka-teks {
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--tulang-redup);
+  max-width: 46ch;
+  margin-bottom: var(--j6);
+}
+
+.pembuka-aksi {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--j3);
+  align-items: center;
+}
+
+.pembuka-catatan {
+  margin-top: var(--j4);
+  font-size: 13.5px;
+  color: var(--tulang-samar);
+}
+
+/* ---------- Panggung angka ----------
+   Bagian di sebelah kanan pembuka: satu angka besar sebagai bukti utama, dengan
+   tiga angka pendukung. Bentuknya seperti panel instrumen, bukan kartu. */
+
+.panggung {
+  border: 1px solid var(--garis-tegas);
+  border-radius: var(--r-panel);
+  background: var(--arang-2);
+  padding: var(--j5);
+}
+
+.panggung-utama {
+  padding-bottom: var(--j4);
+  margin-bottom: var(--j4);
+  border-bottom: 1px solid var(--garis);
+}
+
+.panggung-angka {
+  font-family: var(--font-angka);
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(2.4rem, 5vw, 3.2rem);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--kuningan);
+  letter-spacing: -0.03em;
+}
+
+.panggung-satuan {
+  font-size: 1rem;
+  color: var(--tulang-redup);
+  margin-left: var(--j2);
+}
+
+.panggung-label {
+  font-size: 13.5px;
+  color: var(--tulang-samar);
+  margin-top: var(--j2);
+}
+
+.panggung-sisa {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--j4);
+}
+
+.panggung-sisa > div > .angka-kecil {
+  font-family: var(--font-angka);
+  font-variant-numeric: tabular-nums;
+  font-size: 1rem;
+  color: var(--tulang);
+}
+
+.panggung-sisa > div > .label-kecil {
+  font-size: 12px;
+  color: var(--tulang-samar);
+  margin-top: 1px;
+  line-height: 1.35;
+}
+
+/* ---------- Bagian umum ---------- */
+
+.beranda-bagian {
+  padding: var(--j9) 0;
+  border-bottom: 1px solid var(--garis);
+}
+
+.beranda-bagian:last-of-type {
+  border-bottom: 0;
+}
+
+.beranda-dalam {
+  max-width: var(--lebar-situs);
+  margin: 0 auto;
+  padding: 0 var(--j5);
+}
+
+/* Judul bagian berdiri sendiri, tidak dipisah garis seperti di halaman dokumen.
+   Di beranda, jarak yang memisahkan, bukan garis. */
+.beranda-bagian h2 {
+  font-size: clamp(1.6rem, 3.4vw, 2.4rem);
+  max-width: 22ch;
+  margin-bottom: var(--j5);
+}
+
+.beranda-bagian > .beranda-dalam > .pengantar {
+  font-size: 16.5px;
+  line-height: 1.6;
+  color: var(--tulang-redup);
+  max-width: 52ch;
+  margin-bottom: var(--j6);
+}
+
+/* ---------- Dua kolom berdampingan ----------
+   Dipakai untuk membandingkan dua hal: masalah dan jawabannya, atau dua cara
+   kerja. Garis di tengah yang memisahkan, bukan kotak. */
+
+.banding {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 0;
+  border: 1px solid var(--garis);
+  border-radius: var(--r-panel);
+  overflow: hidden;
+}
+
+.banding > div {
+  padding: var(--j5);
+}
+
+/* Garis pemisah antar kolom, hanya kalau memang berdampingan. */
+.banding > div + div {
+  border-left: 1px solid var(--garis);
+}
+
+.banding h3 {
+  font-size: 1.05rem;
+  font-family: var(--font-isi);
+  font-weight: 600;
+  margin-bottom: var(--j3);
+}
+
+.banding p {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--tulang-redup);
+  margin: 0;
+}
+
+/* Kolom yang berisi jawaban ditandai dengan latar berbeda, supaya perbedaannya
+   terlihat sebelum dibaca. */
+.banding .jawaban {
+  background: var(--arang-2);
+}
+
+/* ---------- Tiga langkah ---------- */
+
+.tiga-langkah {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--j6);
+  counter-reset: langkah;
+}
+
+.langkah-satu {
+  counter-increment: langkah;
+  position: relative;
+  padding-top: var(--j6);
+  border-top: 1px solid var(--garis-tegas);
+}
+
+/* Nomor langkah memakai huruf angka dan warna aksen, dan itu satu-satunya
+   tempat aksen muncul di bagian ini. */
+.langkah-satu::before {
+  content: counter(langkah, decimal-leading-zero);
+  position: absolute;
+  top: calc(var(--j6) * -1);
+  font-family: var(--font-angka);
+  font-size: 13px;
+  color: var(--kuningan);
+  background: var(--arang);
+  padding-right: var(--j3);
+}
+
+.langkah-satu h3 {
+  font-size: 1.05rem;
+  font-family: var(--font-isi);
+  font-weight: 600;
+  margin: 0 0 var(--j2);
+}
+
+.langkah-satu p {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--tulang-redup);
+  margin: 0;
+}
+
+/* ---------- Kemampuan ----------
+   Satu kemampuan utama ditonjolkan, sisanya berdampingan dalam ukuran lebih
+   kecil. Perbedaan ukuran mencerminkan tingkat kepentingannya. */
+
+.kemampuan-utama {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--j5);
+  padding: var(--j5);
+  border: 1px solid var(--garis-tegas);
+  border-radius: var(--r-panel);
+  background: var(--arang-2);
+  margin-bottom: var(--j5);
+}
+
+.kemampuan-utama h3 {
+  font-size: clamp(1.3rem, 2.6vw, 1.7rem);
+  margin-bottom: var(--j2);
+}
+
+.kemampuan-utama p {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--tulang-redup);
+  margin: 0;
+  max-width: 60ch;
+}
+
+.kemampuan-sisa {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--j5);
+}
+
+.kemampuan-sisa h3 {
+  font-size: 0.95rem;
+  font-family: var(--font-isi);
+  font-weight: 600;
+  margin-bottom: var(--j2);
+}
+
+.kemampuan-sisa p {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--tulang-samar);
+  margin: 0;
+}
+
+/* ---------- Panggung video ---------- */
+
+.video-panggung {
+  border: 1px solid var(--garis-tegas);
+  border-radius: var(--r-panel);
+  overflow: hidden;
+  background: var(--kode-latar);
+}
+
+.video-panggung video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Keadaan ketika rekamannya belum ada. Menyebut sebabnya dan apa yang bisa
+   dilakukan, bukan sekadar kotak kosong. */
+.video-belum {
+  display: grid;
+  place-items: center;
+  min-height: 300px;
+  padding: var(--j6);
+  text-align: center;
+  border: 1px dashed var(--garis-tegas);
+  border-radius: var(--r-panel);
+  background: var(--arang-2);
+}
+
+.video-belum strong {
+  display: block;
+  color: var(--tulang);
+  margin-bottom: var(--j2);
+}
+
+.video-belum p {
+  font-size: 14px;
+  color: var(--tulang-samar);
+  margin: 0;
+  max-width: 44ch;
+}
+
+/* ---------- Ajakan akhir ---------- */
+
+.penutup {
+  padding: var(--j9) 0;
+  text-align: left;
+}
+
+.penutup h2 {
+  font-size: clamp(1.8rem, 3.6vw, 2.6rem);
+  max-width: 20ch;
+  margin-bottom: var(--j4);
+}
+
+.penutup p {
+  font-size: 16.5px;
+  line-height: 1.6;
+  color: var(--tulang-redup);
+  max-width: 50ch;
+  margin-bottom: var(--j6);
+}
+
+/* ---------- Tautan lanjut ---------- */
+
+.beranda-lanjut {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--j2);
+  margin-top: var(--j5);
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--tulang);
+}
+
+.beranda-lanjut:hover {
+  color: var(--kuningan);
+}
+
+.beranda-lanjut .arah {
+  color: var(--kuningan);
+}
+
+/* ---------- Layar sempit ---------- */
+
+@media (max-width: 860px) {
+  .pembuka {
+    padding: var(--j8) 0 var(--j7);
+  }
+
+  .pembuka-dalam {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--j7);
+  }
+
+  .pembuka h1 {
+    max-width: none;
+  }
+
+  .beranda-bagian {
+    padding: var(--j8) 0;
+  }
+
+  /* Garis pemisah kolom berpindah dari kiri ke atas, mengikuti cara kolomnya
+     sekarang ditumpuk. */
+  .banding > div + div {
+    border-left: 0;
+    border-top: 1px solid var(--garis);
+  }
+}
+
+@media (max-width: 520px) {
+  .panggung-sisa {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--j3);
+  }
+
+  .pembuka-aksi {
+    gap: var(--j2);
+  }
+
+  .pembuka-aksi .tombol {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+}

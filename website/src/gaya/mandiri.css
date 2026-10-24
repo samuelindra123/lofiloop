@@ -1,0 +1,215 @@
+/* ============================================================================
+   Gaya halaman mandiri.
+   Dipakai bersama beranda.css, jadi kelas yang sudah didefinisikan di sana
+   (banding, tiga-langkah, kemampuan, panggung) bisa dipakai ulang di sini.
+   Berkas ini menambah apa yang khas halaman mandiri.
+   ========================================================================= */
+
+.mandiri {
+  display: block;
+}
+
+/* ---------- Pembuka halaman mandiri ----------
+   Lebih ringkas daripada pembuka beranda: tanpa panggung angka, dan jaraknya
+   lebih rapat. Halaman ini menjelaskan, jadi judul langsung disusul isi. */
+
+.mandiri-pembuka {
+  padding: var(--j8) 0 var(--j6);
+  border-bottom: 1px solid var(--garis);
+}
+
+.mandiri-pembuka-dalam {
+  max-width: var(--lebar-situs);
+  margin: 0 auto;
+  padding: 0 var(--j5);
+}
+
+.mandiri-pembuka h1 {
+  font-size: clamp(2.1rem, 4.4vw, 3.2rem);
+  line-height: 1.1;
+  letter-spacing: -0.022em;
+  margin-bottom: var(--j4);
+  max-width: 20ch;
+}
+
+.mandiri-pembuka .pembuka-teks {
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--tulang-redup);
+  max-width: 54ch;
+  margin: 0;
+}
+
+/* ---------- Bagian ----------
+   Lebih rapat daripada beranda, karena halaman ini dibaca lebih lama. */
+
+.mandiri-bagian {
+  padding: var(--j8) 0;
+}
+
+.mandiri-bagian + .mandiri-bagian {
+  border-top: 1px solid var(--garis);
+}
+
+/* Latar berselang-seling.
+ *
+ * Semua bagian berlatar sama dan hanya dipisah garis, dan hasilnya terbaca monoton:
+ * enam bagian berturut-turut terlihat seperti satu blok panjang. Latar yang berganti
+ * memberi batas yang terlihat tanpa perlu menambah garis baru. */
+.mandiri-bagian:nth-of-type(even) {
+  background: var(--arang-2);
+}
+
+/* Bagian yang memang sudah punya latarnya sendiri tidak ikut aturan di atas. */
+.mandiri-bagian.bagian-batasan,
+.mandiri-bagian.bagian-keputusan,
+.mandiri-bagian.bagian-bantuan {
+  background: var(--arang-2);
+}
+
+.mandiri-bagian:last-of-type {
+  border-bottom: 0;
+}
+
+/* ---------- Lebar isi ----------
+ *
+ * Lebar dan padding dipasang pada SATU wadah di dalam setiap bagian, bukan pada
+ * setiap anak langsungnya.
+ *
+ * Sebelumnya aturannya `.mandiri-bagian > *`, dan itu salah: setiap judul, paragraf,
+ * dan tabel di- center sendiri-sendiri, sehingga tepi kirinya tidak sejajar ketika
+ * lebarnya berbeda. Yang terlihat bukan rapi, melainkan berantakan.
+ *
+ * Sekarang setiap bagian berisi satu wadah, dan seluruh isinya rata pada tepi yang
+ * sama. Wadahnya bisa dilewati dengan kelas `bagian-penuh` untuk isi yang memang
+ * harus selebar jendela. */
+
+.mandiri-bagian > .mandiri-dalam,
+.mandiri-bagian > .wadah {
+  max-width: var(--lebar-situs);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--j5);
+  padding-right: var(--j5);
+}
+
+.mandiri-bagian > .bagian-penuh {
+  max-width: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Bagian yang isinya langsung tanpa wadah tetap mendapat batas lebar dan padding,
+   supaya tidak ada bagian yang isinya menempel ke tepi jendela. Aturan ini hanya
+   berlaku kalau tidak ada wadah di dalamnya. */
+.mandiri-bagian > :not(.mandiri-dalam):not(.wadah):not(.bagian-penuh) {
+  max-width: calc(var(--lebar-situs) - var(--j5) * 2);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Padding tepi untuk kasus terakhir di atas, dipasang pada bagiannya karena anak
+   langsungnya tidak boleh diberi padding sendiri-sendiri. */
+.mandiri-bagian {
+  padding-left: var(--j5);
+  padding-right: var(--j5);
+}
+
+@media (max-width: 520px) {
+  .mandiri-bagian {
+    padding-left: var(--j4);
+    padding-right: var(--j4);
+  }
+
+  .mandiri-bagian > .mandiri-dalam,
+  .mandiri-bagian > .wadah {
+    padding-left: var(--j4);
+    padding-right: var(--j4);
+  }
+}
+
+.mandiri-bagian h2 {
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  max-width: 24ch;
+  /* Jarak judul ke isi dibuat lebih lega daripada jarak antar paragraf, supaya
+     judulnya terbaca sebagai pemisah bagian, bukan sebagai kalimat pertama isi. */
+  margin-bottom: var(--j5);
+}
+
+/* Judul bagian yang punya label di atasnya tidak perlu jarak bawah besar lagi,
+   karena labelnya sudah memisahkan. */
+.mandiri-bagian .label-atas + h2 {
+  margin-top: 0;
+}
+
+/* Paragraf pertama setelah judul tidak boleh punya jarak atas, karena jarak
+   bawah judul sudah mengaturnya. Tanpa ini, jaraknya menjadi dua kali lipat. */
+.mandiri-bagian h2 + p,
+.mandiri-bagian h2 + .pengantar {
+  margin-top: 0;
+}
+
+.mandiri-bagian h3 {
+  font-size: 1.05rem;
+  font-family: var(--font-isi);
+  font-weight: 600;
+  margin: var(--j5) 0 var(--j2);
+}
+
+/* Paragraf isi dibatasi lebarnya agar barisnya nyaman dibaca, tetapi bagiannya
+   tetap selebar halaman supaya tabel dan blok kode bisa memakai ruang. */
+.mandiri-bagian p,
+.mandiri-bagian ul:not(.langkah),
+.mandiri-bagian ol:not(.langkah) {
+  max-width: 62ch;
+  color: var(--tulang-redup);
+  font-size: 15px;
+  line-height: 1.68;
+}
+
+.mandiri-bagian ul:not(.langkah),
+.mandiri-bagian ol:not(.langkah) {
+  padding-left: var(--j5);
+}
+
+.mandiri-bagian li {
+  margin-bottom: var(--j2);
+}
+
+.mandiri-bagian li strong {
+  color: var(--tulang);
+}
+
+.mandiri-bagian p strong {
+  color: var(--tulang);
+}
+
+/* Tautan lanjut ke halaman lain, sama bentuknya dengan di beranda. */
+.mandiri-lanjut {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--j2);
+  margin-top: var(--j4);
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--tulang);
+}
+
+.mandiri-lanjut:hover {
+  color: var(--kuningan);
+}
+
+.mandiri-lanjut .arah {
+  color: var(--kuningan);
+}
+
+@media (max-width: 860px) {
+  .mandiri-pembuka {
+    padding: var(--j7) 0 var(--j5);
+  }
+
+  .mandiri-bagian {
+    padding: var(--j7) 0;
+  }
+}

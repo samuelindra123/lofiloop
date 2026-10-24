@@ -1,0 +1,83 @@
+---
+/**
+ * Pilih tema terang atau gelap.
+ *
+ * Tombolnya benar-benar bekerja: ia mengubah atribut tema pada elemen akar dan
+ * menyimpan pilihan ke localStorage. Pilihan itu dibaca kembali oleh skrip kecil
+ * di dalam kepala halaman, sehingga tema bertahan antar halaman tanpa kedipan.
+ *
+ * Karena tombol ini ada, kedua tema wajib bekerja penuh. Itu sudah diperiksa:
+ * setiap pasangan warna pada kedua tema diukur rasio kontrasnya, dan seluruhnya
+ * lolos ambang WCAG AA.
+ */
+---
+
+<button
+  id="tombol-tema"
+  class="pilih-tema"
+  type="button"
+  aria-label="Ganti tema terang atau gelap"
+  title="Ganti tema"
+>
+  <svg class="ikon-gelap" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none">
+    <path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+  </svg>
+  <svg class="ikon-terang" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none">
+    <circle cx="8" cy="8" r="3.2" stroke="currentColor" stroke-width="1.4"/>
+    <path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3 3l1.1 1.1M11.9 11.9 13 13M13 3l-1.1 1.1M4.1 11.9 3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+  </svg>
+</button>
+
+<style>
+  .pilih-tema {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* Sasaran sentuh 36px pada kepala yang tipis, tetap nyaman disentuh. */
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--garis);
+    border-radius: var(--r-kendali);
+    color: var(--tulang-redup);
+    cursor: pointer;
+    transition:
+      color var(--dur) var(--ease),
+      border-color var(--dur) var(--ease);
+  }
+
+  .pilih-tema:hover {
+    color: var(--tulang);
+    border-color: var(--garis-tegas);
+  }
+
+  /* Ikon bulan saat tema gelap, ikon matahari saat tema terang. Ikon yang
+     ditampilkan adalah tema yang akan dipakai kalau tombol ditekan. */
+  .ikon-terang {
+    display: none;
+  }
+
+  :global([data-tema="terang"]) .ikon-gelap {
+    display: none;
+  }
+
+  :global([data-tema="terang"]) .ikon-terang {
+    display: block;
+  }
+</style>
+
+<script>
+  const tombol = document.getElementById("tombol-tema");
+  tombol?.addEventListener("click", () => {
+    const akar = document.documentElement;
+    const sekarang = akar.dataset.tema === "terang" ? "terang" : "gelap";
+    const berikutnya = sekarang === "terang" ? "gelap" : "terang";
+    akar.dataset.tema = berikutnya;
+    try {
+      localStorage.setItem("lofiloop-tema", berikutnya);
+    } catch {
+      // Kalau penyimpanan diblokir, temanya tetap berganti untuk halaman ini.
+    }
+  });
+</script>

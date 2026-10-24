@@ -1,0 +1,225 @@
+---
+/**
+ * Pemutar rekaman demo.
+ *
+ * Menampilkan rekaman layar utuh, apa adanya: satu berkas, tanpa potongan dan tanpa
+ * pemangkasan gambar. Rekaman aslinya memperlihatkan seluruh alur dari awal sampai
+ * akhir, termasuk judul jendela dan lambang aplikasinya, dan justru bagian itulah
+ * yang membuat rekaman ini terbaca sebagai aplikasi desktop sungguhan.
+ *
+ * Versi sebelumnya memangkas tepi gambar agar jendelanya memenuhi layar. Itu keliru:
+ * yang terbuang bukan pinggiran kosong, melainkan bilah judul berisi lambang aplikasi.
+ * Karena itu tidak ada `crop` di mana pun pada rekaman ini.
+ *
+ * Rekaman berjalan sendiri tanpa suara. Peramban mengizinkan autoplay tanpa suara,
+ * tidak dengan suara, jadi rekamannya dimulai dalam keadaan bisu dan tombol di bawah
+ * video yang menyalakannya. Kendali bawaan peramban tetap dipakai seluruhnya, jadi
+ * tidak ada kendali buatan sendiri yang bisa melenceng dari perilaku aslinya.
+ *
+ * Ini satu-satunya bagian situs yang memakai JavaScript, dan itu disengaja: tidak ada
+ * cara menyalakan suara tanpa JS. Skripnya tidak memuat pustaka apa pun, dan kalau ia
+ * gagal dimuat, kendali bawaan peramban tetap bekerja.
+ */
+import rekaman from "../data/rekaman.json";
+
+const { poster, klip, durasi, lebar, tinggi } = rekaman;
+---
+
+<figure class="rekaman">
+  <div class="rekaman-panggung">
+    <video
+      id="rekaman-video"
+      class="rekaman-gambar"
+      poster={poster}
+      width={lebar}
+      height={tinggi}
+      muted
+      playsinline
+      preload="metadata"
+      aria-label="Rekaman layar aplikasi LofiLoop dari awal sampai akhir: memilih berkas, mengatur durasi, menjalankan render, lalu menggabungkan beberapa lagu."
+    >
+      <source src={klip} type="video/mp4" />
+      Perambanmu tidak mendukung pemutaran video. Rekamannya bisa diunduh dari
+      <a href={klip}>berkas MP4 ini</a>.
+    </video>
+
+    <!--
+      Tombol suara ditaruh tepat di bawah gambar, bukan melayang di atasnya, supaya
+      tidak ada satu pun bagian rekaman yang tertutup. Peramban tidak menyediakan
+      tombol suara pada kendali bawaannya saat video dimulai dalam keadaan bisu, jadi
+      tombol ini yang menggantikannya.
+    -->
+    <div class="rekaman-bilah">
+      <button
+        id="rekaman-suara"
+        class="rekaman-suara"
+        type="button"
+        aria-pressed="false"
+        aria-label="Nyalakan suara rekaman"
+      >
+        <svg class="ikon-bisu" width="18" height="18" viewBox="0 0 20 20" aria-hidden="true" fill="none">
+          <path d="M3 8h3l4-3.2v10.4L6 12H3V8Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="m13 8.2 4 3.6M17 8.2l-4 3.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <svg class="ikon-bunyi" width="18" height="18" viewBox="0 0 20 20" aria-hidden="true" fill="none">
+          <path d="M3 8h3l4-3.2v10.4L6 12H3V8Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M12.6 7.4a4 4 0 0 1 0 5.2M15 5a7.4 7.4 0 0 1 0 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span class="teks-tombol">Suara mati</span>
+      </button>
+
+      <span class="rekaman-lama">{durasi} menit 34 detik, tanpa dipercepat</span>
+    </div>
+  </div>
+
+  <figcaption class="rekaman-keterangan">
+    Rekaman asli tanpa potongan. Klip <em>Antariksa dan Bumi</em> yang aslinya 21 detik
+    diubah menjadi video berdurasi 1 jam, dan render-nya selesai dalam 104 detik dengan
+    pemakaian memori puncak 29 MB. Langkah-langkahnya diuraikan di bagian berikutnya.
+  </figcaption>
+</figure>
+
+<style>
+  .rekaman {
+    margin: 0;
+  }
+
+  .rekaman-panggung {
+    border: 1px solid var(--garis-tegas);
+    border-radius: var(--r-panel);
+    overflow: hidden;
+    background: var(--kode-latar);
+  }
+
+  /* Rekaman ditampilkan pada lebar penuhnya dengan rasio aslinya. Tidak ada
+     pemangkasan: seluruh tepi jendela, bilah judul, dan lambang aplikasinya ikut
+     terlihat, dan itu memang yang membuat rekaman ini berguna. */
+  .rekaman-gambar {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .rekaman-bilah {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--j4);
+    padding: var(--j3) var(--j4);
+    border-top: 1px solid var(--garis);
+    background: var(--arang-2);
+  }
+
+  .rekaman-suara {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--j2);
+    /* Sasaran sentuh 40px, cukup untuk jempol. */
+    min-height: 40px;
+    padding: 0 var(--j4);
+    border: 1px solid var(--garis-tegas);
+    border-radius: var(--r-kendali);
+    background: transparent;
+    color: var(--tulang);
+    font-family: var(--font-isi);
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      border-color var(--dur) var(--ease),
+      color var(--dur) var(--ease);
+  }
+
+  .rekaman-suara:hover {
+    border-color: var(--kuningan);
+    color: var(--kuningan);
+  }
+
+  /* Salah satu ikon ditampilkan, mengikuti keadaan suara. */
+  .ikon-bunyi {
+    display: none;
+  }
+
+  .rekaman-suara[aria-pressed="true"] .ikon-bisu {
+    display: none;
+  }
+
+  .rekaman-suara[aria-pressed="true"] .ikon-bunyi {
+    display: block;
+  }
+
+  /* Saat suara menyala, tombolnya ditandai warna aksen. Ini satu-satunya tempat
+     aksen muncul di bagian rekaman, dan tandanya menyatakan keadaan yang nyata. */
+  .rekaman-suara[aria-pressed="true"] {
+    border-color: var(--kuningan);
+    color: var(--kuningan);
+  }
+
+  /* Lama rekaman memakai monospace, seperti seluruh angka lain di situs ini. */
+  .rekaman-lama {
+    font-family: var(--font-angka);
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--tulang-samar);
+  }
+
+  .rekaman-keterangan {
+    margin-top: var(--j4);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--tulang-samar);
+    max-width: 68ch;
+  }
+
+  .rekaman-keterangan em {
+    color: var(--tulang-redup);
+    font-style: normal;
+  }
+
+  /* Di layar sempit teks tombolnya disembunyikan dan hanya ikon yang tampil, supaya
+     tombol dan lamanya rekaman tetap muat dalam satu baris. */
+  @media (max-width: 520px) {
+    .teks-tombol,
+    .rekaman-lama {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  const video = document.getElementById("rekaman-video") as HTMLVideoElement | null;
+  const tombol = document.getElementById("rekaman-suara") as HTMLButtonElement | null;
+
+  if (video && tombol) {
+    // Peramban hanya mengizinkan autoplay tanpa suara. Kalau karena satu dan lain hal
+    // tetap ditolak, rekamannya dibiarkan diam dan pengunjung memakai kendali bawaan.
+    video.play().catch(() => {});
+
+    const perbarui = () => {
+      const menyala = !video.muted;
+      tombol.setAttribute("aria-pressed", String(menyala));
+      tombol.setAttribute(
+        "aria-label",
+        menyala ? "Matikan suara rekaman" : "Nyalakan suara rekaman",
+      );
+      const teks = tombol.querySelector(".teks-tombol");
+      if (teks) teks.textContent = menyala ? "Suara hidup" : "Suara mati";
+    };
+
+    tombol.addEventListener("click", () => {
+      video.muted = !video.muted;
+      // Menyalakan suara di tengah pemutaran kadang dijeda peramban, jadi
+      // pemutarannya dipastikan berjalan lagi.
+      if (!video.muted && video.paused) {
+        video.play().catch(() => {});
+      }
+      perbarui();
+    });
+
+    // Kalau pengunjung memakai kendali bawaan untuk membunyikan, tombolnya ikut
+    // menyesuaikan supaya tidak ada dua keadaan yang saling bertentangan.
+    video.addEventListener("volumechange", perbarui);
+
+    perbarui();
+  }
+</script>

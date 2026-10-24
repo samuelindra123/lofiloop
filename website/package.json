@@ -1,0 +1,26 @@
+{
+  "name": "lofiloop-web",
+  "private": true,
+  "version": "0.2.3",
+  "type": "module",
+  "packageManager": "pnpm@12.14.0",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "pratinjau": "astro preview",
+    "ambil-versi": "node skrip/ambil-versi.mjs",
+    "periksa": "astro check && node skrip-uji/periksa-isyarat.mjs",
+    "uji": "node skrip-uji/periksa-versi.mjs && node skrip-uji/periksa-kontras.mjs && node skrip-uji/periksa-struktur.mjs && node skrip-uji/periksa-tautan.mjs"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/sitemap": "^3.7.1",
+    "@tailwindcss/vite": "^4.1.18",
+    "astro": "^5.16.2",
+    "motion": "^12.34.0",
+    "pagefind": "^1.4.0",
+    "sharp": "^0.35.5",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.9.3"
+  }
+}

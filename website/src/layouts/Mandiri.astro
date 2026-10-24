@@ -1,0 +1,72 @@
+---
+/**
+ * Kerangka halaman mandiri.
+ *
+ * Dipakai halaman yang bukan beranda dan bukan rujukan teknis: fitur, cara kerja,
+ * panduan, pengukuran, pembanding, developer, dan pembuat.
+ *
+ * Bedanya dengan kerangka dokumen: tanpa bilah samping dan tanpa bilah tab. Halaman
+ * ini dibaca dari atas ke bawah seperti cerita, bukan dicari bagiannya seperti
+ * rujukan, jadi daftar navigasi di samping justru mengganggu.
+ *
+ * Bedanya dengan beranda: tanpa jarak sebesar beranda dan tanpa panggung angka di
+ * pembukanya. Halaman ini menjelaskan, bukan menjual, sehingga kepadatannya sedikit
+ * lebih tinggi daripada beranda.
+ *
+ * Yang sama di ketiganya: kepala dan kaki. Itu yang membuat seluruh situs tetap
+ * terasa satu tempat.
+ */
+import "../gaya/global.css";
+import "../gaya/beranda.css";
+import "../gaya/mandiri.css";
+import Kepala from "../komponen/Kepala.astro";
+import Kaki from "../komponen/Kaki.astro";
+
+const { judul, keterangan = "" } = Astro.props;
+const kanonik = new URL(Astro.url.pathname, Astro.site ?? "https://lofiloop.vercel.app");
+---
+
+<!doctype html>
+<html lang="id" data-tema="gelap">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{judul} · LofiLoop</title>
+    {keterangan && <meta name="description" content={keterangan} />}
+    <link rel="canonical" href={kanonik.href} />
+    <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+    <meta name="color-scheme" content="dark light" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={`${judul} · LofiLoop`} />
+    {keterangan && <meta property="og:description" content={keterangan} />}
+    <meta property="og:url" content={kanonik.href} />
+
+    <script is:inline>
+      (() => {
+        try {
+          const tersimpan = localStorage.getItem("lofiloop-tema");
+          if (tersimpan === "terang" || tersimpan === "gelap") {
+            document.documentElement.dataset.tema = tersimpan;
+          } else if (window.matchMedia("(prefers-color-scheme: light)").matches) {
+            document.documentElement.dataset.tema = "terang";
+          }
+        } catch {
+          // localStorage bisa diblokir. Kalau begitu, tema gelap dipakai apa adanya.
+        }
+      })();
+    </script>
+  </head>
+
+  <body>
+    <a class="lewati" href="#isi">Lewati ke isi</a>
+
+    <Kepala />
+
+    <main id="isi" class="mandiri">
+      <slot />
+    </main>
+
+    <Kaki />
+  </body>
+</html>

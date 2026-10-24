@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <!--
+    Poster untuk panggung video di beranda. Ditampilkan sebelum rekamannya mulai
+    diputar, dan bertahan sebagai gambar kalau berkas rekamannya belum ada.
+
+    Isinya bukan hiasan: ia menggambarkan susunan unit loop yang menjadi inti cara
+    kerja LofiLoop, yaitu bagian tengah klip, lalu jendela crossfade yang berakhir
+    tepat di frame pertama klip.
+  -->
+  <rect width="1280" height="720" fill="#17140F"/>
+
+  <!-- Judul kecil di kiri atas, memakai huruf sistem karena ini gambar. -->
+  <text x="64" y="86" font-family="ui-monospace, monospace" font-size="20" fill="#8F8574">
+    susunan satu putaran loop
+  </text>
+
+  <!-- Baris klip: tiga bagian yang disusun ulang. -->
+  <g transform="translate(64, 150)">
+    <!-- Keterangan baris. -->
+    <text x="0" y="-18" font-family="ui-monospace, monospace" font-size="17" fill="#A99E8C">klip sumber</text>
+
+    <!-- Klip sumber, utuh. -->
+    <rect x="0" y="0" width="1152" height="58" rx="6" fill="#1F1B15" stroke="#332C23"/>
+    <rect x="0" y="0" width="132" height="58" rx="6" fill="#2A241C"/>
+    <text x="66" y="36" font-family="ui-monospace, monospace" font-size="15" fill="#A99E8C" text-anchor="middle">kepala</text>
+    <text x="576" y="36" font-family="ui-monospace, monospace" font-size="15" fill="#A99E8C" text-anchor="middle">tengah</text>
+    <text x="1090" y="36" font-family="ui-monospace, monospace" font-size="15" fill="#A99E8C" text-anchor="middle">ekor</text>
+
+    <!-- Tanda frame 0. -->
+    <line x1="132" y1="-10" x2="132" y2="70" stroke="#C9964A" stroke-width="2"/>
+    <text x="140" y="-22" font-family="ui-monospace, monospace" font-size="15" fill="#C9964A">frame 0</text>
+  </g>
+
+  <g transform="translate(64, 320)">
+    <text x="0" y="-18" font-family="ui-monospace, monospace" font-size="17" fill="#A99E8C">unit yang disusun</text>
+
+    <!-- Tengah, lalu sambungan, dengan penanda crossfade. -->
+    <rect x="0" y="0" width="888" height="58" rx="6" fill="#1F1B15" stroke="#332C23"/>
+    <text x="444" y="36" font-family="ui-monospace, monospace" font-size="15" fill="#A99E8C" text-anchor="middle">tengah klip</text>
+
+    <!-- Jendela crossfade. -->
+    <rect x="888" y="0" width="264" height="58" rx="6" fill="#2A241C" stroke="#C9964A"/>
+    <text x="1020" y="36" font-family="ui-monospace, monospace" font-size="15" fill="#C9964A" text-anchor="middle">crossfade</text>
+
+    <!-- Tanda titik sambung. -->
+    <line x1="888" y1="-10" x2="888" y2="70" stroke="#C9964A" stroke-width="2" stroke-dasharray="4 4"/>
+    <text x="896" y="-22" font-family="ui-monospace, monospace" font-size="15" fill="#C9964A">
+      berakhir tepat di frame 0
+    </text>
+  </g>
+
+  <!-- Baris pengulangan: unit yang sama, diulang tiga kali. -->
+  <g transform="translate(64, 490)">
+    <text x="0" y="-18" font-family="ui-monospace, monospace" font-size="17" fill="#A99E8C">saat diulang</text>
+
+    <rect x="0" y="0" width="368" height="44" rx="6" fill="#1F1B15" stroke="#332C23"/>
+    <rect x="392" y="0" width="368" height="44" rx="6" fill="#1F1B15" stroke="#332C23"/>
+    <rect x="784" y="0" width="368" height="44" rx="6" fill="#1F1B15" stroke="#332C23"/>
+
+    <text x="184" y="28" font-family="ui-monospace, monospace" font-size="14" fill="#8F8574" text-anchor="middle">putaran 1</text>
+    <text x="576" y="28" font-family="ui-monospace, monospace" font-size="14" fill="#8F8574" text-anchor="middle">putaran 2</text>
+    <text x="968" y="28" font-family="ui-monospace, monospace" font-size="14" fill="#8F8574" text-anchor="middle">putaran 3</text>
+
+    <!-- Penanda sambungan antar putaran. -->
+    <line x1="392" y1="-8" x2="392" y2="56" stroke="#C9964A" stroke-width="2"/>
+    <line x1="784" y1="-8" x2="784" y2="56" stroke="#C9964A" stroke-width="2"/>
+  </g>
+
+  <!-- Keterangan bawah. -->
+  <text x="64" y="672" font-family="ui-monospace, monospace" font-size="16" fill="#8F8574">
+    sambungan tidak terlihat karena frame terakhir setiap putaran menyambung ke frame pertamanya
+  </text>
+</svg>

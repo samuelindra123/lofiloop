@@ -1,0 +1,286 @@
+---
+import Beranda from "../layouts/Beranda.astro";
+import PemutarDemo from "../komponen/PemutarDemo.astro";
+import LangkahGambar from "../komponen/LangkahGambar.astro";
+import versi from "../data/versi.json";
+
+/**
+ * Beranda: halaman perkenalan, bukan halaman rujukan.
+ *
+ * Bentuknya sengaja berbeda dari halaman dokumen. Beranda mengarahkan pembaca dari
+ * masalah ke unduhan lewat lima bagian, dan setiap bagian punya bentuk sendiri
+ * sesuai isinya: pembuka dengan satu angka bukti, perbandingan dua kolom, tiga
+ * langkah pemakaian, panggung video, lalu kemampuan yang bertingkat.
+ *
+ * Seluruh angka berasal dari pengukuran nyata di docs/benchmark.md dan dari
+ * versi.json. Tidak ada satu pun angka yang dikarang.
+ */
+const terbaru = versi.versi[0];
+const pemasang = terbaru.berkas.find((b) => b.nama.includes("Setup"));
+const portabel = terbaru.berkas.find((b) => b.nama.includes("portable"));
+
+function ukuranMB(bytes: number) {
+  if (!bytes) return null;
+  return `${(bytes / 1_000_000).toFixed(1)} MB`;
+}
+---
+
+<Beranda
+  judul="LofiLoop, klip pendek jadi video panjang tanpa sambungan terlihat"
+  keterangan="LofiLoop mengubah klip pendek menjadi video lofi berdurasi panjang dengan sambungan mulus, dan menggabungkan banyak lagu jadi satu berkas. Ringan untuk laptop kelas bawah."
+>
+  <!--
+    Bagian 1: pembuka. Satu titik fokus, yaitu judul, ditemani satu angka bukti
+    yang paling meyakinkan. Angka itu ditaruh berdampingan, bukan di bawah, supaya
+    pembaca langsung melihat kedua hal dalam satu pandangan.
+  -->
+  <section class="pembuka">
+    <div class="pembuka-dalam">
+      <div>
+        <h1>Klip pendek jadi video panjang, tanpa sambungan yang terlihat.</h1>
+        <p class="pembuka-teks">
+          LofiLoop menyambung ulang klip videomu dengan crossfade, menggantinya dengan
+          audio pilihanmu, dan mengulanginya sampai durasi yang kamu mau. Encode ulang
+          terjadi sekali saja, bukan berkali-kali.
+        </p>
+
+        <div class="pembuka-aksi">
+          <a class="tombol tombol-utama" href={terbaru.tautan_rilis}>
+            Unduh untuk Windows{pemasang ? ` (${ukuranMB(pemasang.ukuran)})` : ""}
+          </a>
+          <a class="tombol" href="/panduan">Baca panduan</a>
+        </div>
+
+        <p class="pembuka-catatan">
+          Versi {terbaru.versi}, terbit {terbaru.tanggal}. Windows 10 dan 11.{portabel
+            ? ` Ada juga versi portabel (${ukuranMB(portabel.ukuran)}) tanpa pemasangan.`
+            : ""}
+        </p>
+      </div>
+
+      <!--
+        Panggung angka. Bentuknya seperti panel instrumen, bukan kartu: satu angka
+        besar sebagai bukti utama, tiga angka pendukung di bawahnya. Yang dipilih
+        jadi angka utama adalah waktu render, karena itu yang paling sulit dipercaya
+        dan paling mudah diperiksa.
+      -->
+      <div class="panggung">
+        <div class="panggung-utama">
+          <div>
+            <span class="panggung-angka">104</span>
+            <span class="panggung-satuan">detik</span>
+          </div>
+          <div class="panggung-label">
+            untuk menghasilkan video 1080p berdurasi 1 jam
+          </div>
+        </div>
+
+        <div class="panggung-sisa">
+          <div>
+            <div class="angka-kecil">29 MB</div>
+            <div class="label-kecil">memori puncak, tidak tumbuh seiring durasi</div>
+          </div>
+          <div>
+            <div class="angka-kecil">1,10</div>
+            <div class="label-kecil">rasio sambungan, batas lulus 1,5</div>
+          </div>
+          <div>
+            <div class="angka-kecil">0</div>
+            <div class="label-kecil">galat saat berkas 1 jam didekode ulang</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!--
+    Bagian 2: masalah dan jawabannya, berdampingan. Membandingkan dua pendekatan
+    adalah inti produk ini, jadi bentuk pembandingan yang paling jujur adalah
+    menaruh keduanya sejajar.
+  -->
+  <section class="beranda-bagian">
+    <div class="beranda-dalam">
+      <h2>Mengulang video itu mudah. Yang sulit membuat sambungannya tidak terasa.</h2>
+
+      <div class="banding">
+        <div>
+          <h3>Cara yang biasa</h3>
+          <p>
+            Memproses ulang seluruh berkas dari awal berarti menunggu selama durasi
+            hasilnya. Untuk video 8 jam, kamu menunggu 8 jam. Sambungannya pun kasar,
+            karena tidak ada peleburan di titik sambung, dan memori yang dipakai
+            tumbuh seiring panjang videonya.
+          </p>
+        </div>
+        <div class="jawaban">
+          <h3>Yang LofiLoop lakukan</h3>
+          <p>
+            Menyusun satu putaran yang halus lebih dulu, lalu mengulangnya sebagai
+            salinan paket, bukan encode ulang. Biaya pemrosesan dibayar sekali, dan
+            memorinya tetap. Video 8 jam selesai dalam hitungan menit.
+          </p>
+        </div>
+      </div>
+
+      <a class="beranda-lanjut" href="/cara-kerja">
+        Bagaimana persisnya sambungan itu dibuat
+        <span class="arah" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+
+  <!--
+    Bagian 3: rekaman aplikasinya bekerja, utuh tanpa potongan.
+    Ditaruh di sini, setelah pembaca mengerti apa produknya dan sebelum membaca
+    langkah pemakaian, karena di titik inilah orang wajar ingin melihatnya.
+    Rekamannya sengaja tidak dipotong: justru alurnya yang panjang itu yang
+    memperlihatkan bahwa alat ini memang dipakai untuk kerja sungguhan.
+  -->
+  <section class="beranda-bagian">
+    <div class="beranda-dalam">
+      <h2>Melihatnya bekerja, dari awal sampai akhir</h2>
+      <p class="pengantar">
+        Rekaman layar utuh tanpa potongan dan tanpa dipercepat: memilih berkas,
+        mengatur durasi, menjalankan render, sampai menggabungkan beberapa lagu
+        sekaligus. Berjalan sendiri tanpa suara, dan suaranya bisa dinyalakan lewat
+        tombol di bawah video.
+      </p>
+
+      <PemutarDemo />
+    </div>
+  </section>
+
+  <!--
+    Bagian 4: alur pemakaian sebagai tangkapan layar per langkah.
+    Gambarnya diambil dari rekaman di atas, jadi yang dilihat pembaca di sini persis
+    yang ia lihat di video. Ditaruh setelah video karena orang menonton dulu, baru
+    ingin membacanya pelan-pelan.
+  -->
+  <section class="beranda-bagian">
+    <div class="beranda-dalam">
+      <LangkahGambar />
+    </div>
+  </section>
+
+  <!--
+    Bagian 5: tiga langkah ringkas. Jumlahnya tiga karena memang itu jumlah
+    langkahnya, bukan karena templat memaksa tiga. Ringkasannya ada di sini,
+    sedangkan tangkapan layar tiap langkahnya ada di bagian sebelumnya.
+  -->
+  <section class="beranda-bagian">
+    <div class="beranda-dalam">
+      <h2>Tiga langkah, tanpa menyetel apa pun kalau tidak mau</h2>
+      <p class="pengantar">
+        Pengaturan bawaannya sudah masuk akal. Kamu hanya perlu mengubahnya kalau
+        memang ada yang ingin berbeda.
+      </p>
+
+      <div class="tiga-langkah">
+        <div class="langkah-satu">
+          <h3>Pilih berkas</h3>
+          <p>
+            Klik atau seret klip videonya. LofiLoop langsung menampilkan durasi,
+            resolusi, dan frame per detiknya, plus memberi tahu apakah suara di video
+            itu benar-benar terdengar.
+          </p>
+        </div>
+        <div class="langkah-satu">
+          <h3>Atur durasi</h3>
+          <p>
+            Tentukan hasilnya mau berapa lama, dari 1 menit sampai 6 jam. Perkiraan
+            ukuran berkas dan lama rendernya ditampilkan sebelum kamu menekan tombol.
+          </p>
+        </div>
+        <div class="langkah-satu">
+          <h3>Jalankan render</h3>
+          <p>
+            Progresnya bisa dilihat sambil berjalan, dan bisa dibatalkan kalau perlu.
+            Hasilnya siap dipakai begitu selesai.
+          </p>
+        </div>
+      </div>
+
+      <a class="beranda-lanjut" href="/panduan">
+        Panduan lengkap dengan tangkapan tiap langkah
+        <span class="arah" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+
+  <!--
+    Bagian 6: kemampuan, disusun bertingkat. Satu yang utama ditonjolkan karena
+    itulah alasan orang memakainya, sisanya berdampingan dalam ukuran lebih kecil
+    karena sifatnya menunjang.
+  -->
+  <section class="beranda-bagian">
+    <div class="beranda-dalam">
+      <h2>Yang bisa dikerjakan</h2>
+
+      <div class="kemampuan-utama">
+        <div>
+          <h3>Loop video tanpa sambungan kasar</h3>
+          <p>
+            Satu putaran disusun dari ujung dan pangkal klip yang saling melebur, jadi
+            putaran demi putaran tidak memperlihatkan garis sambungan. Panjang satu
+            putaran bisa sepanjang klipnya, dan itu tidak berubah walau kamu mengubah
+            resolusi atau frame per detik keluaran.
+          </p>
+        </div>
+      </div>
+
+      <div class="kemampuan-sisa">
+        <div>
+          <h3>Ganti atau campur audio</h3>
+          <p>
+            Suara video bisa diganti, dicampur, atau dipertahankan. Volume disamakan
+            otomatis ke -14 LUFS.
+          </p>
+        </div>
+        <div>
+          <h3>Gabung banyak lagu</h3>
+          <p>
+            Berapa pun jumlahnya, digabung jadi satu berkas dengan transisi
+            equal-power. Urutannya bisa diatur.
+          </p>
+        </div>
+        <div>
+          <h3>Kendali ukuran berkas</h3>
+          <p>
+            Resolusi, frame per detik, dan bitrate bisa diatur, dengan perkiraan ukuran
+            sebelum render dijalankan.
+          </p>
+        </div>
+        <div>
+          <h3>Versi baris perintah</h3>
+          <p>
+            Seluruh pengaturan yang sama, bisa dipakai untuk memproses banyak berkas
+            sekaligus dari skrip.
+          </p>
+        </div>
+      </div>
+
+      <a class="beranda-lanjut" href="/fitur">
+        Rincian tiap kemampuan
+        <span class="arah" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Bagian 7: penutup. Satu tindakan, tanpa mengulang seluruh penjelasan. -->
+  <section class="penutup">
+    <div class="beranda-dalam">
+      <h2>Siap dipakai di laptop yang kamu punya sekarang</h2>
+      <p>
+        Seluruh angka di halaman ini diukur pada laptop kelas bawah dengan RAM 3,8 GB,
+        bukan komputer uji bertenaga tinggi. Kalau di situ bisa, di mesinmu juga.
+      </p>
+
+      <div class="pembuka-aksi">
+        <a class="tombol tombol-utama" href={terbaru.tautan_rilis}>
+          Unduh versi {terbaru.versi}
+        </a>
+        <a class="tombol" href="/pengukuran">Lihat semua angka pengukurannya</a>
+      </div>
+    </div>
+  </section>
+</Beranda>

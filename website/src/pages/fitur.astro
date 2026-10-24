@@ -1,0 +1,393 @@
+---
+import Mandiri from "../layouts/Mandiri.astro";
+import versi from "../data/versi.json";
+
+/**
+ * Fitur.
+ *
+ * Halaman ini paling banyak isinya, jadi susunannya dibuat bertingkat supaya tidak
+ * menjadi daftar panjang yang sulit dipindai.
+ *
+ * Tiga tingkat yang dipakai:
+ * 1. Kemampuan utama, satu saja, dibahas paling lengkap karena itu alasan orang
+ *    memakainya.
+ * 2. Kemampuan pendukung, dibahas dalam blok masing-masing dengan bentuk yang
+ *    sesuai isinya: yang punya pilihan memakai tabel, yang punya langkah memakai
+ *    daftar.
+ * 3. Batasan, ditaruh paling akhir dan ditulis terbuka, karena itu yang dicari
+ *    orang sebelum memutuskan.
+ */
+const terbaru = versi.versi[0];
+
+const audioPilihan = [
+  { nama: "Ganti", arti: "Suara video dibuang, audio pilihanmu dipakai", bawaan: true },
+  { nama: "Campur", arti: "Keduanya terdengar, audio pilihanmu turun saat video bersuara", bawaan: false },
+  { nama: "Pertahankan", arti: "Suara video dibiarkan, audio pilihanmu diabaikan", bawaan: false },
+];
+
+const bentukKeluaran = [
+  { nama: "Durasi hasil", rentang: "1 menit sampai 6 jam", catatan: "Bisa diketik langsung lewat baris perintah" },
+  { nama: "Panjang satu putaran", rentang: "sampai sepanjang klip", catatan: "Seluruh isi klip bisa dipakai" },
+  { nama: "Crossfade video", rentang: "0,5 sampai 4 dtk", catatan: "Bagian yang saling melebur di sambungan" },
+  { nama: "Fade-out audio", rentang: "1 sampai 10 dtk", catatan: "Meredupkan suara di akhir hasil" },
+];
+
+const pengaruhUkuran = [
+  { nama: "Resolusi", arti: "Paling besar. Turun dari 1080p ke 720p memangkas sekitar separuh" },
+  { nama: "Bitrate", arti: "Berbanding lurus. Setengah bitrate berarti sekitar setengah ukuran" },
+  { nama: "Frame per detik", arti: "Sedang. Menaikkannya menambah ukuran, menurunkannya menghemat" },
+];
+
+const batasan = [
+  {
+    judul: "Hanya Windows 10 dan 11",
+    isi: "Belum ada versi macOS atau Linux, dan tidak ada rencana membangunnya dalam waktu dekat.",
+  },
+  {
+    judul: "Tidak ada penyuntingan klip",
+    isi: "Kamu tidak bisa memotong, memangkas, atau menambah teks di dalam LofiLoop. Semua pemrosesan berjalan apa adanya dari berkas sumber.",
+  },
+  {
+    judul: "Berjalan di komputermu sendiri",
+    isi: "Tidak ada layanan awan dan tidak ada unggahan otomatis ke layanan pemutaran.",
+  },
+  {
+    judul: "Menaikkan fps atau resolusi tidak menambah detail",
+    isi: "Pilihan itu tersedia dan tetap berguna untuk menyamakan bentuk dengan materi lain, tetapi ketajamannya tidak bertambah.",
+  },
+];
+---
+
+<Mandiri
+  judul="Fitur"
+  keterangan="Kemampuan LofiLoop: loop video tanpa sambungan kasar, penggantian audio, penggabungan lagu, kendali bentuk keluaran, dan pembersihan otomatis."
+>
+  <section class="mandiri-pembuka">
+    <div class="mandiri-pembuka-dalam">
+      <p class="label-atas">Kemampuan</p>
+      <h1>Apa yang bisa dikerjakan, dan sampai di mana batasnya</h1>
+      <p class="pembuka-teks">
+        Satu kemampuan utama, empat pendukung, dan empat batasan yang ditulis terbuka.
+        Bagian batasan ditaruh di akhir supaya kamu bisa menilai kecocokannya sebelum
+        mengunduh.
+      </p>
+    </div>
+  </section>
+
+  <!-- Tingkat 1: kemampuan utama. Dibahas paling lengkap karena inilah alasan
+       orang memakai LofiLoop, bukan fitur tambahan. -->
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+      <p class="label-atas">Kemampuan utama</p>
+      <h2>Loop video tanpa sambungan yang terlihat</h2>
+
+      <p>
+        Klip pendekmu diulang menjadi durasi berapa pun, dengan ujung dan pangkal klip
+        yang saling melebur memakai crossfade. Hasilnya tidak memperlihatkan garis
+        sambungan saat diputar berulang.
+      </p>
+
+      <div class="tabel-bungkus">
+        <table>
+          <thead>
+            <tr>
+              <th>Pengaturan</th>
+              <th>Rentang</th>
+              <th>Catatan</th>
+            </tr>
+          </thead>
+          <tbody>
+            {bentukKeluaran.map((b) => (
+              <tr>
+                <td>{b.nama}</td>
+                <td class="angka">{b.rentang}</td>
+                <td>{b.catatan}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="kunci">
+        Panjang satu putaran dibatasi durasi klip, bukan oleh pengaturan lain. Klip 10
+        detik berbatas 10 detik, dan itu tidak berubah walau kamu mengubah resolusi atau
+        frame per detik keluaran.
+      </div>
+    </div>
+  </section>
+
+  <!-- Tingkat 2: kemampuan pendukung. -->
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+      <p class="label-atas">Kemampuan pendukung</p>
+
+      <div class="kemampuan-blok">
+        <div class="kemampuan-teks">
+          <h3>Suara video: dimatikan, dicampur, atau dipertahankan</h3>
+          <p>
+            LofiLoop memeriksa dulu apakah video sumbermu benar-benar bersuara. Video
+            yang audionya hanya berisi derau dasar diperlakukan sebagai tanpa suara,
+            sehingga audio pilihanmu langsung dipakai tanpa perlu diatur apa pun.
+          </p>
+          <p>
+            Kalau kamu tidak memilih audio sama sekali, suara video dipertahankan apa
+            pun pengaturannya, karena tidak masuk akal menghasilkan video bisu.
+          </p>
+        </div>
+
+        <div class="kemampuan-tabel">
+          <div class="tabel-bungkus">
+            <table>
+              <thead>
+                <tr>
+                  <th>Pilihan</th>
+                  <th>Yang terjadi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {audioPilihan.map((a) => (
+                  <tr>
+                    <td><strong>{a.nama}</strong>{a.bawaan ? " (bawaan)" : ""}</td>
+                    <td>{a.arti}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="kunci">
+        Volume audio pilihanmu disamakan ke -14 LUFS, standar yang dipakai layanan
+        pemutaran, supaya hasilnya tidak terlalu pelan atau terlalu keras dibanding
+        video lain.
+      </div>
+    </div>
+  </section>
+
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+      <h3 class="judul-blok">Gabung banyak lagu jadi satu</h3>
+      <p>
+        Berapa pun jumlah lagu, digabung menjadi satu berkas dengan transisi equal-power
+        antar lagu. Transisi itu menjaga jumlah daya di sambungan tetap sama, sehingga
+        volumenya tidak melonjak turun di tengah perpindahan.
+      </p>
+
+      <ul class="daftar-bersih">
+        <li>
+          <strong>Urutan bisa diatur</strong> dengan seret atau tombol naik dan turun
+          sebelum digabung.
+        </li>
+        <li>
+          <strong>Volume disamakan otomatis</strong> antar lagu, jadi lagu yang direkam
+          lebih pelan tidak tenggelam.
+        </li>
+        <li>
+          <strong>Panjang transisi bisa diatur</strong>, termasuk nol untuk potongan
+          langsung tanpa transisi.
+        </li>
+      </ul>
+
+      <div class="kunci">
+        Hasil penggabungan bisa langsung dipakai sebagai audio di halaman loop video.
+      </div>
+    </div>
+  </section>
+
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+      <h3 class="judul-blok">Kendali ukuran berkas</h3>
+      <p>
+        Resolusi, frame per detik, dan bitrate bisa diatur bebas. Ketiganya saling
+        memengaruhi ukuran berkas, dan perkiraannya ditampilkan sebelum render dijalankan
+        sehingga kamu tidak perlu menunggu untuk tahu hasilnya sebesar apa.
+      </p>
+
+      <dl class="daftar-angka">
+        {pengaruhUkuran.map((p) => (
+          <div>
+            <dt>{p.nama}</dt>
+            <dd class="teks-biasa">{p.arti}</dd>
+          </div>
+        ))}
+      </dl>
+
+      <p>
+        Lebar keluaran mengikuti rasio aspek klip sumbermu, jadi gambar tidak pernah
+        gepeng.
+      </p>
+    </div>
+  </section>
+
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+      <h3 class="judul-blok">Hemat ruang dan waktu</h3>
+      <p>
+        LofiLoop tidak menulis berkas antara berukuran raksasa, dan tidak memproses ulang
+        bagian yang tidak perlu. Pada mesin uji kelas bawah, satu jam video 1080p jadi
+        dalam 104 detik dengan memori puncak 29 MB.
+      </p>
+      <p>
+        Saat bekerja, LofiLoop menulis berkas sementara ke folder bernama
+        <code>&lt;namahasil&gt;.work</code> di sebelah berkas hasil. Folder itu dihapus
+        sendiri begitu pekerjaan selesai. Kalau render gagal, isinya sengaja disisakan
+        untuk diperiksa, kecuali kalau ternyata kosong, karena folder kosong tidak
+        memberi petunjuk apa pun.
+      </p>
+    </div>
+  </section>
+
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+      <h3 class="judul-blok">Pemberitahuan versi baru</h3>
+      <p>
+        Saat dibuka, LofiLoop memeriksa apakah ada versi lebih baru dan memberi tahu
+        kalau ada. Pemeriksaan itu disimpan dan dipakai ulang selama 24 jam, sehingga
+        membuka aplikasi berulang kali tidak membebani GitHub. Ada juga tombol periksa
+        manual di bilah judul kalau kamu tidak mau menunggu.
+      </p>
+      <p>
+        Pemasangan tetap kamu lakukan sendiri dengan mengunduh berkasnya. LofiLoop tidak
+        menimpa dirinya sendiri, karena satu langkah keliru pada proses seperti itu bisa
+        membuat aplikasi yang sedang dipakai tidak bisa dijalankan lagi.
+      </p>
+
+      <a class="mandiri-lanjut" href="/rilis">
+        Lihat riwayat versi dan unduh {terbaru.versi}
+        <span class="arah" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Tingkat 3: batasan, di akhir dan ditulis terbuka. -->
+  <section class="mandiri-bagian bagian-batasan">
+    <div class="mandiri-dalam">
+      <p class="label-atas">Batasan</p>
+      <h2>Yang belum ada</h2>
+      <p>
+        Supaya kamu tidak mencari kemampuan yang memang tidak ada, dan tidak menunggu
+        sesuatu yang tidak sedang dikerjakan.
+      </p>
+
+      <div class="batasan-daftar">
+        {batasan.map((b) => (
+          <div class="batasan-satu">
+            <h3>{b.judul}</h3>
+            <p>{b.isi}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+</Mandiri>
+
+<style>
+  .label-atas {
+    font-family: var(--font-angka);
+    font-size: 12.5px;
+    color: var(--kuningan);
+    margin: 0 0 var(--j3);
+  }
+
+  /* Judul blok kemampuan pendukung. Memakai huruf isi, bukan huruf judul, karena
+     ini bukan judul bagian melainkan judul di dalam bagian. */
+  .judul-blok {
+    font-family: var(--font-judul);
+    font-size: clamp(1.3rem, 2.4vw, 1.6rem);
+    margin: 0 0 var(--j3);
+  }
+
+  /* Kotak kuncian: satu kalimat penting yang perlu ditekankan setelah penjelasan
+     panjang. Garis tepi kirinya penanda, warnanya redup supaya tidak berteriak. */
+  .kunci {
+    border-left: 2px solid var(--kuningan);
+    padding: var(--j1) 0 var(--j1) var(--j5);
+    margin-top: var(--j5);
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--tulang-redup);
+    max-width: 62ch;
+  }
+
+  /* Blok pendukung yang punya teks di kiri dan tabel di kanan. */
+  .kemampuan-blok {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--j7);
+    align-items: start;
+  }
+
+  .kemampuan-teks h3 {
+    margin-top: 0;
+  }
+
+  .kemampuan-tabel .tabel-bungkus {
+    margin-bottom: 0;
+  }
+
+  /* Daftar tanpa penanda, dipakai saat butirnya sudah ditebalkan di awal sehingga
+     penanda daftar jadi berlebihan. */
+  .daftar-bersih {
+    list-style: none;
+    padding-left: 0 !important;
+    border-top: 1px solid var(--garis);
+    max-width: 62ch;
+  }
+
+  .daftar-bersih li {
+    padding: var(--j3) 0;
+    border-bottom: 1px solid var(--garis);
+    margin-bottom: 0 !important;
+    font-size: 14.5px;
+    color: var(--tulang-redup);
+  }
+
+  /* Daftar angka yang kolom kanannya berisi teks, bukan angka. Hurufnya tetap
+     memakai huruf isi supaya terbaca, tetapi perataannya tetap rata kanan. */
+  .daftar-angka dd.teks-biasa {
+    font-family: var(--font-isi);
+    font-size: 14px;
+    max-width: 44ch;
+    line-height: 1.5;
+  }
+
+  /* ---------- Batasan ---------- */
+
+  .bagian-batasan {
+    background: var(--arang-2);
+  }
+
+  .batasan-daftar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--j5);
+    margin-top: var(--j5);
+  }
+
+  .batasan-satu {
+    border-top: 1px solid var(--garis-tegas);
+    padding-top: var(--j4);
+  }
+
+  .batasan-satu h3 {
+    font-size: 14.5px;
+    font-family: var(--font-isi);
+    font-weight: 600;
+    margin: 0 0 var(--j2);
+  }
+
+  .batasan-satu p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--tulang-samar);
+  }
+
+  @media (max-width: 780px) {
+    .kemampuan-blok {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--j5);
+    }
+  }
+</style>

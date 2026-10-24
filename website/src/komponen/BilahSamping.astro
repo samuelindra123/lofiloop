@@ -1,0 +1,156 @@
+---
+/**
+ * Bilah samping navigasi dokumen.
+ *
+ * Dipakai di semua halaman. Di layar sempit ia berubah menjadi daftar yang bisa
+ * dibuka, bukan menghilang begitu saja, supaya tujuan yang sama tetap terjangkau
+ * tanpa tetikus.
+ *
+ * Setiap tautan di sini menuju halaman yang benar-benar ada. Tidak ada satu pun
+ * yang menuju bagian yang belum dibangun.
+ */
+const { aktif = "" } = Astro.props;
+
+const kelompok = [
+  {
+    judul: "Rujukan",
+    tautan: [
+      { href: "/cli", label: "Baris perintah" },
+      { href: "/pengukuran", label: "Angka pengukuran" },
+      { href: "/pemecahan-masalah", label: "Pemecahan masalah" },
+      { href: "/lisensi", label: "Lisensi" },
+    ],
+  },
+];
+---
+
+<aside class="samping">
+  <!--
+    Di layar sempit, daftar ini dibuka lewat tombol. Tombolnya diberi label
+    "Dokumentasi", bukan hanya ikon, karena ikon tiga garis tanpa keterangan
+    mengandaikan pembaca sudah tahu artinya.
+  -->
+  <details class="samping-buka" open>
+    <summary>Dokumentasi</summary>
+    <nav aria-label="Navigasi dokumentasi">
+      {kelompok.map((k) => (
+        <div class="samping-kelompok">
+          <div class="samping-judul">{k.judul}</div>
+          <ul>
+            {k.tautan.map((t) => (
+              <li>
+                <a
+                  href={t.href}
+                  aria-current={aktif === t.href ? "page" : undefined}
+                  class={aktif === t.href ? "aktif" : ""}
+                >{t.label}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </nav>
+  </details>
+</aside>
+
+<style>
+  .samping {
+    position: sticky;
+    /* Menempel di bawah kepala dan bilah tab, bukan di bawah tepi jendela.
+       Angkanya 100px = tinggi kepala 56px + bilah tab 42px + sedikit jarak.
+       Kalau salah satu tinggi itu berubah, angka ini ikut disesuaikan. */
+    top: 100px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    padding: var(--j7) 0 var(--j7);
+    border-right: 1px solid var(--garis);
+    padding-right: var(--j5);
+  }
+
+  .samping-buka > summary {
+    /* Di layar lebar, judul ringkasannya disembunyikan karena daftarnya sudah
+       terbuka dan judulnya hanya mengulang nama bagian. */
+    display: none;
+  }
+
+  .samping-kelompok + .samping-kelompok {
+    margin-top: var(--j5);
+  }
+
+  .samping-judul {
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    color: var(--tulang-samar);
+    margin-bottom: var(--j2);
+  }
+
+  .samping ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .samping a {
+    display: block;
+    /* Tinggi baris dijaga agar nyaman disentuh, walau teksnya kecil. */
+    padding: 5px 0;
+    font-size: 14px;
+    color: var(--tulang-redup);
+    text-decoration: none;
+    transition: color var(--dur) var(--ease);
+  }
+
+  .samping a:hover {
+    color: var(--tulang);
+  }
+
+  /* Halaman yang sedang dibaca ditandai warna aksen, dan itu satu-satunya tempat
+     aksen muncul di bilah samping. */
+  .samping a.aktif {
+    color: var(--kuningan);
+    font-weight: 500;
+  }
+
+  @media (max-width: 900px) {
+    .samping {
+      position: static;
+      max-height: none;
+      overflow: visible;
+      border-right: 0;
+      border-bottom: 1px solid var(--garis);
+      padding: var(--j4) 0;
+    }
+
+    .samping-buka > summary {
+      display: block;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--tulang);
+      padding: var(--j2) 0;
+      list-style: none;
+    }
+
+    .samping-buka > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .samping-buka > summary::before {
+      content: "▸ ";
+      color: var(--kuningan);
+    }
+
+    .samping-buka[open] > summary::before {
+      content: "▾ ";
+    }
+
+    .samping-buka > summary::after {
+      content: " (12 halaman)";
+      color: var(--tulang-samar);
+      font-size: 12.5px;
+    }
+
+    .samping-buka[open] > summary {
+      margin-bottom: var(--j3);
+    }
+  }
+</style>

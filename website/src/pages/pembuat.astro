@@ -1,0 +1,196 @@
+---
+import Mandiri from "../layouts/Mandiri.astro";
+import versi from "../data/versi.json";
+
+/**
+ * Halaman pembuat.
+ *
+ * Satu halaman khusus, bukan kredit di setiap halaman. Halaman ini memuat hal yang
+ * bisa diperiksa: apa yang dikerjakan, bagaimana keputusannya diambil, dan ke mana
+ * orang bisa mengadu. Tidak ada pujian diri, tidak ada angka yang tidak bisa
+ * ditelusuri.
+ *
+ * Seluruh angka di halaman ini berasal dari data yang benar-benar ada: jumlah rilis
+ * dari versi.json, dan angka pengukuran dari docs/benchmark.md.
+ */
+const jumlahRilis = versi.versi.length;
+const rilisPertama = versi.versi[versi.versi.length - 1];
+const rilisTerbaru = versi.versi[0];
+
+const tanggalPanjang = (iso: string) => {
+  const bulan = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+  ];
+  const [t, b, h] = iso.split("-").map(Number);
+  return `${h} ${bulan[b - 1]} ${t}`;
+};
+
+const catatanKerja = [
+  {
+    judul: "Kenapa alat ini dibuat",
+    isi: "Masalahnya sederhana dan berulang: klip pendek yang harus jadi video panjang, di laptop yang tidak bertenaga. Cara yang ada menghabiskan waktu berjam-jam dan memorinya membengkak. LofiLoop dibuat untuk menjawab satu pertanyaan itu saja, bukan untuk jadi penyunting video.",
+  },
+  {
+    judul: "Kenapa angkanya diukur, bukan dikira",
+    isi: "Beberapa keputusan penting lahir dari pengukuran yang hasilnya berlawanan dengan dugaan awal. Encoder perangkat keras ternyata merusak sambungan, dan itu baru ketahuan setelah diukur. Kalau hanya mengandalkan perkiraan, alat ini akan memakai encoder yang salah dan sambungannya kasar.",
+  },
+  {
+    judul: "Kenapa sebagian keputusan dicatat",
+    isi: "Ada empat keputusan rancangan yang terlihat seperti keanehan kalau dibaca tanpa konteks, misalnya kenapa unit loop dibangun dengan nomor frame dan bukan detik. Semuanya ada di halaman panduan developer, supaya tidak ada yang memperbaikinya tanpa tahu apa yang sudah diuji.",
+  },
+];
+
+const alat = [
+  "Rust, untuk mesin pemrosesan",
+  "Tauri 2, untuk aplikasi desktop",
+  "Svelte 5, untuk antarmuka aplikasi",
+  "FFmpeg, untuk seluruh pemrosesan media",
+  "Astro dan Tailwind, untuk situs dokumentasi ini",
+  "GitHub Actions, untuk pemeriksaan dan rilis otomatis",
+];
+---
+
+<Mandiri
+  judul="Pembuat"
+  keterangan="Samuel Indra Bastian, pembuat LofiLoop: apa yang dikerjakan, bagaimana keputusannya diambil, dan ke mana orang bisa mengadu."
+>
+  <section class="mandiri-pembuka">
+    <div class="mandiri-pembuka-dalam">
+    <h1>Samuel Indra Bastian</h1>
+    <p class="pembuka-teks">
+      Pembuat LofiLoop. Proyek ini dikerjakan satu orang, dari mesin pemrosesan sampai
+      situs yang sedang kamu baca ini.
+    </p>
+    </div>
+  </section>
+
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+    <h2>Sekilas</h2>
+    <dl class="daftar-angka">
+      <div>
+        <dt>Peran</dt>
+        <dd>Perancang dan pengembang</dd>
+      </div>
+      <div>
+        <dt>Kode sumber</dt>
+        <dd>github.com/samuelindra123</dd>
+      </div>
+      <div>
+        <dt>Rilis pertama</dt>
+        <dd>{tanggalPanjang(rilisPertama.tanggal)}</dd>
+      </div>
+      <div>
+        <dt>Rilis terbaru</dt>
+        <dd>{rilisTerbaru.versi}, {tanggalPanjang(rilisTerbaru.tanggal)}</dd>
+      </div>
+      <div>
+        <dt>Jumlah rilis</dt>
+        <dd>{jumlahRilis}</dd>
+      </div>
+      <div>
+        <dt>Lisensi</dt>
+        <dd>MIT</dd>
+      </div>
+    </dl>
+    </div>
+  </section>
+
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+    <h2>Cara kerjanya</h2>
+    <p>
+      Tiga hal yang menjelaskan bagaimana proyek ini dijalankan, dan ketiganya terlihat
+      di kode maupun di halaman-halaman dokumentasi ini.
+    </p>
+
+    {catatanKerja.map((c) => (
+      <div class="catatan">
+        <h3>{c.judul}</h3>
+        <p>{c.isi}</p>
+      </div>
+    ))}
+    </div>
+  </section>
+
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+    <h2>Yang dipakai</h2>
+    <p>
+      Semuanya perangkat lunak terbuka. Bagian yang paling banyak dikerjakan bukan
+      pemrosesan medianya, melainkan menyusun perintah yang benar untuk FFmpeg dan
+      mengatur kapan tiap bagian dijalankan.
+    </p>
+    <ul>
+      {alat.map((a) => (
+        <li>{a}</li>
+      ))}
+    </ul>
+    </div>
+  </section>
+
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+    <h2>Yang belum, dan itu memang begitu</h2>
+    <p>
+      Proyek ini dikerjakan sendirian. Artinya tidak ada tim dukungan, tidak ada janji
+      waktu tanggap, dan tidak ada rencana rilis yang terjadwal. Laporan isu tetap
+      dibaca dan dibalas sebaik mungkin, tetapi jangan menunggu jawaban dalam hitungan
+      jam.
+    </p>
+    <p>
+      Bagian yang belum ada juga sudah disebut terbuka di
+      <a href="/tentang">halaman tentang</a>, supaya tidak ada yang menunggu sesuatu
+      yang tidak sedang dikerjakan. Yang paling sering ditanyakan: versi macOS dan
+      Linux belum ada, dan tidak ada rencana membangunnya dalam waktu dekat.
+    </p>
+    </div>
+  </section>
+
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+    <h2>Menghubungi</h2>
+    <p>
+      Cara paling langsung adalah lewat
+      <a href="https://github.com/samuelindra123/lofiloop/issues">halaman isu di GitHub</a>.
+      Isu di sana bisa dilihat orang lain, jadi jawaban atas satu pertanyaan ikut
+      menolong orang berikutnya yang menemui hal yang sama.
+    </p>
+    <p>
+      Kalau kamu menemukan sesuatu yang tidak ada di
+      <a href="/pemecahan-masalah">halaman pemecahan masalah</a>, itu justru laporan
+      yang paling berguna, karena berarti ada yang belum terpikirkan sebelumnya.
+    </p>
+
+    <a class="mandiri-lanjut" href="https://github.com/samuelindra123/lofiloop">
+      Buka repositori di GitHub
+      <span class="arah" aria-hidden="true">→</span>
+    </a>
+    </div>
+  </section>
+</Mandiri>
+
+<style>
+  .catatan {
+    border-left: 2px solid var(--garis-tegas);
+    padding-left: var(--j5);
+    margin-bottom: var(--j5);
+  }
+
+  /* Judul catatan di sini bukan judul bagian, jadi ukurannya lebih kecil dan
+     memakai huruf isi, bukan huruf judul. */
+  .catatan h3 {
+    font-family: var(--font-isi);
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 var(--j2);
+  }
+
+  .catatan p {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--tulang-redup);
+  }
+</style>

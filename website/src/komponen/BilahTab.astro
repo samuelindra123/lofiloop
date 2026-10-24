@@ -1,0 +1,101 @@
+---
+/**
+ * Bilah tab dokumen.
+ *
+ * Berisi halaman rujukan teknis, dengan halaman yang sedang dibaca ditandai. Ia
+ * duduk tepat di bawah kepala halaman, dan hanya muncul di halaman rujukan.
+ *
+ * Alasannya ada bilah ini: bilah samping di sebelah kiri sudah memuat daftar yang
+ * sama, tetapi ia hilang di layar sempit. Bilah tab memastikan pembaca selalu tahu
+ * di halaman mana ia berada dan bisa berpindah tanpa kembali ke atas.
+ *
+ * Daftarnya sengaja dibatasi pada halaman rujukan teknis. Halaman penjelasan
+ * seperti cara kerja, panduan, dan fitur tidak masuk, karena ketiganya punya
+ * kerangka sendiri tanpa bilah samping. Memasukkannya ke sini akan membuat bilah
+ * tab menjadi jalan pintas menuju halaman yang bentuknya berbeda.
+ */
+const { aktif = "" } = Astro.props;
+
+// Hanya halaman rujukan teknis, yaitu halaman yang dibuka orang untuk mencari
+// satu jawaban tertentu. Halaman penjelasan seperti cara kerja dan panduan tidak
+// masuk sini, karena keduanya dibaca dari atas ke bawah dan punya kerangka sendiri.
+const tab = [
+  { href: "/cli", label: "Baris perintah" },
+  { href: "/pengukuran", label: "Pengukuran" },
+  { href: "/pemecahan-masalah", label: "Pemecahan masalah" },
+  { href: "/lisensi", label: "Lisensi" },
+];
+---
+
+<nav class="bilah-tab" aria-label="Halaman dokumentasi">
+  <div class="bilah-tab-isi">
+    {tab.map((t) => (
+      <a
+        href={t.href}
+        aria-current={aktif === t.href ? "page" : undefined}
+        class={aktif === t.href ? "aktif" : ""}
+      >
+        {t.label}
+      </a>
+    ))}
+  </div>
+</nav>
+
+<style>
+  .bilah-tab {
+    border-bottom: 1px solid var(--garis);
+    background: var(--arang);
+  }
+
+  .bilah-tab-isi {
+    display: flex;
+    align-items: stretch;
+    gap: var(--j1);
+    max-width: var(--lebar-situs);
+    margin: 0 auto;
+    padding: 0 var(--j5);
+    /* Bisa digulir mendatar sendiri, sehingga daftar yang panjang tidak pernah
+       memaksa seluruh halaman bisa digulir ke samping di layar sempit. */
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .bilah-tab-isi::-webkit-scrollbar {
+    display: none;
+  }
+
+  .bilah-tab a {
+    display: inline-flex;
+    align-items: center;
+    /* Tinggi baris dijaga agar nyaman disentuh jempol. */
+    min-height: 42px;
+    padding: 0 var(--j3);
+    font-size: 13.5px;
+    color: var(--tulang-samar);
+    text-decoration: none;
+    white-space: nowrap;
+    /* Garis bawah transparan disiapkan sejak awal, supaya teksnya tidak bergeser
+       saat halaman aktif ditandai. */
+    border-bottom: 2px solid transparent;
+    transition: color var(--dur) var(--ease);
+  }
+
+  .bilah-tab a:hover {
+    color: var(--tulang);
+  }
+
+  /* Halaman yang sedang dibaca ditandai warna aksen dan garis bawah. Dua tanda
+     sekaligus, bukan warna saja, supaya tetap terbaca oleh orang yang tidak
+     membedakan warna. */
+  .bilah-tab a.aktif {
+    color: var(--kuningan);
+    border-bottom-color: var(--kuningan);
+  }
+
+  @media (max-width: 640px) {
+    .bilah-tab a {
+      padding: 0 var(--j2);
+      font-size: 13px;
+    }
+  }
+</style>

@@ -1,0 +1,136 @@
+---
+/**
+ * Kaki halaman.
+ *
+ * Disusun dari apa yang benar-benar ada di situs ini, bukan dari empat kolom
+ * templat. Tiga kelompok, karena itulah pengelompokan yang berguna di sini:
+ * cara memakainya, penjelasannya, dan proyeknya.
+ */
+const kolom = [
+  {
+    judul: "Memakai",
+    tautan: [
+      { href: "/panduan", label: "Panduan pemakaian" },
+      { href: "/cli", label: "Baris perintah" },
+      { href: "/fitur", label: "Fitur" },
+      { href: "/pemecahan-masalah", label: "Pemecahan masalah" },
+    ],
+  },
+  {
+    judul: "Penjelasan",
+    tautan: [
+      { href: "/cara-kerja", label: "Cara kerja" },
+      { href: "/pengukuran", label: "Angka pengukuran" },
+      { href: "/pembanding", label: "Dibanding alat lain" },
+    ],
+  },
+  {
+    judul: "Proyek",
+    tautan: [
+      { href: "/rilis", label: "Riwayat rilis" },
+      { href: "/developer", label: "Panduan developer" },
+      { href: "/tentang", label: "Tentang" },
+      { href: "/pembuat", label: "Pembuat" },
+      { href: "/lisensi", label: "Lisensi" },
+    ],
+  },
+];
+---
+
+<footer class="kaki">
+  <div class="bungkus kaki-isi">
+    <div class="kaki-merek-blok">
+      <div class="kaki-merek">LofiLoop</div>
+      <p class="kaki-catatan">
+        Alat desktop untuk Windows 10 dan 11. Dilisensikan MIT.
+        Dibangun dengan Rust, Tauri, dan FFmpeg.
+      </p>
+      <a class="kaki-github" href="https://github.com/samuelindra123/lofiloop">
+        Kode sumber di GitHub
+      </a>
+    </div>
+
+    {kolom.map((k) => (
+      <nav class="kaki-kolom" aria-label={`Tautan ${k.judul}`}>
+        <div class="kaki-judul">{k.judul}</div>
+        {k.tautan.map((t) => (
+          <a href={t.href}>{t.label}</a>
+        ))}
+      </nav>
+    ))}
+  </div>
+</footer>
+
+<style>
+  .kaki {
+    border-top: 1px solid var(--garis);
+    margin-top: var(--j8);
+  }
+
+  .kaki-isi {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr));
+    gap: var(--j7);
+    padding: var(--j8) var(--j5) var(--j7);
+  }
+
+  .kaki-merek {
+    font-family: var(--font-judul);
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: var(--j2);
+  }
+
+  .kaki-catatan {
+    color: var(--tulang-samar);
+    font-size: 13.5px;
+    max-width: 36ch;
+    margin: 0 0 var(--j3);
+  }
+
+  .kaki-github {
+    font-size: 13.5px;
+    color: var(--tulang-redup);
+  }
+
+  .kaki-kolom {
+    display: flex;
+    flex-direction: column;
+    gap: var(--j2);
+  }
+
+  .kaki-judul {
+    font-size: 12px;
+    color: var(--tulang-samar);
+    margin-bottom: var(--j1);
+  }
+
+  .kaki-kolom a {
+    font-size: 14px;
+    color: var(--tulang-redup);
+    text-decoration: none;
+    /* Sasaran sentuh cukup tinggi walau teksnya kecil. */
+    padding: 3px 0;
+  }
+
+  .kaki-kolom a:hover {
+    color: var(--tulang);
+  }
+
+  @media (max-width: 900px) {
+    .kaki-isi {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--j6);
+    }
+
+    .kaki-merek-blok {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .kaki-isi {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

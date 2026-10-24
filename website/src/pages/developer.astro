@@ -1,0 +1,515 @@
+---
+import Mandiri from "../layouts/Mandiri.astro";
+
+/**
+ * Panduan developer.
+ *
+ * Halaman ini sebelumnya menumpuk empat tabel lebar penuh berturut-turut, dan itu
+ * membuatnya padat dan sulit dipindai. Sekarang tiap bagian program diringkas jadi
+ * satu baris yang bisa dibuka, sehingga yang terlihat lebih dulu hanya empat nama
+ * bagian, bukan tiga puluh baris tabel.
+ *
+ * Isi lain disusun bertingkat: perintah build, lalu keputusan rancangan yang
+ * sengaja dibuat begitu, karena itulah bagian yang paling sering perlu dibaca
+ * sebelum mengubah kode orang lain.
+ */
+
+const bagianProgram = [
+  {
+    nama: "crates/engine",
+    arti: "Seluruh logika pemrosesan. Tidak tahu apa-apa soal tampilan.",
+    berkas: [
+      { nama: "render.rs", tugas: "Mengatur urutan seluruh alur render video" },
+      { nama: "video.rs", tugas: "Menyusun unit loop dan menghitung batas panjangnya" },
+      { nama: "audio.rs", tugas: "Rencana pengulangan lagu, crossfade, dan fade-out" },
+      { nama: "merge.rs", tugas: "Menggabungkan banyak lagu dengan transisi" },
+      { nama: "probe.rs", tugas: "Membaca keterangan berkas lewat ffprobe" },
+      { nama: "ffmpeg.rs", tugas: "Menjalankan perintah dan membaca kemajuannya" },
+      { nama: "proc.rs", tugas: "Meluncurkan proses bantu tanpa jendela konsol" },
+      { nama: "machine.rs", tugas: "Memeriksa kemampuan mesin dan memilih encoder" },
+      { nama: "setup.rs", tugas: "Mengunduh dan memasang FFmpeg otomatis" },
+      { nama: "config.rs", tugas: "Menyimpan dan membaca pengaturan pengguna" },
+      { nama: "run.rs", tugas: "Konteks pekerjaan, pelaporan kemajuan, dan pembersihan" },
+      { nama: "error.rs", tugas: "Jenis galat beserta pesannya" },
+    ],
+  },
+  {
+    nama: "crates/cli",
+    arti: "Program baris perintah. Membaca argumen lalu memanggil engine.",
+    berkas: [{ nama: "main.rs", tugas: "Penguraian argumen dan pencetakan hasil" }],
+  },
+  {
+    nama: "app/src-tauri",
+    arti: "Shell aplikasi desktop. Tipis: perintah Tauri yang memanggil engine.",
+    berkas: [
+      { nama: "main.rs", tugas: "Perintah Tauri dan bentuk data yang dikirim ke antarmuka" },
+      { nama: "update.rs", tugas: "Memeriksa versi terbaru tanpa memasangnya sendiri" },
+    ],
+  },
+  {
+    nama: "app/ui",
+    arti: "Antarmuka Svelte 5. Murni tampilan, tanpa logika pemrosesan.",
+    berkas: [
+      { nama: "App.svelte", tugas: "Halaman loop video" },
+      { nama: "MergePage.svelte", tugas: "Halaman gabung lagu" },
+      { nama: "bridge.js", tugas: "Pembungkus tipis di atas API Tauri" },
+      { nama: "timer.js", tugas: "Penghitung waktu berjalan" },
+    ],
+  },
+];
+
+const perintahSitus = [
+  { nama: "pnpm install", arti: "Memasang dependensi antarmuka situs" },
+  { nama: "pnpm run dev", arti: "Menjalankan server pengembangan di localhost:4321" },
+  { nama: "pnpm run build", arti: "Membangun situs statis ke folder dist" },
+  { nama: "pnpm run ambil-versi", arti: "Menyusun ulang data versi dari changelog" },
+  { nama: "pnpm run uji", arti: "Memeriksa data versi, kontras, dan tautan internal" },
+  { nama: "pnpm run periksa", arti: "Memeriksa tipe TypeScript dan isyarat kode" },
+];
+
+const perintahRust = [
+  { nama: "cargo build --release", arti: "Membangun seluruh bagian program dalam mode rilis" },
+  { nama: "cargo test --workspace", arti: "Menjalankan seluruh pengujian" },
+  { nama: "cargo clippy --workspace --all-targets -- -D warnings", arti: "Pemeriksa gaya, peringatan diperlakukan sebagai galat" },
+  { nama: "cargo fmt --all", arti: "Merapikan format kode" },
+];
+
+const keputusan = [
+  {
+    judul: "Unit loop dibangun dengan nomor frame, bukan detik",
+    isi: "Dengan detik, frame terakhir putaran tidak berarti 100 persen klip, dan selisih itu muncul sebagai lompatan kecil di sambungan. Terukur: rasionya 1,65 dengan detik, turun ke 1,10 dengan nomor frame.",
+  },
+  {
+    judul: "libx264 jadi bawaan, bukan encoder perangkat keras",
+    isi: "Encoder perangkat keras seharusnya lebih baik karena memakai unit grafis. Pada pengukuran, sambungannya justru gagal konsisten dengan rasio 1,73, karena ia menaruh artefak di frame pertama setiap GOP, dan artefak itu berulang persis di setiap sambungan.",
+  },
+  {
+    judul: "Crossfade video bawaannya 2 detik, bukan 1",
+    isi: "Crossfade 1 detik menghasilkan rasio sambungan 1,38. Crossfade 2 detik menurunkannya ke 1,05. Keduanya lulus, tetapi yang kedua jelas lebih halus, dan biayanya hanya satu detik tambahan pada tahap penyusunan unit.",
+  },
+  {
+    judul: "Berkas antara audio disimpan sebagai PCM, bukan AAC",
+    isi: "Saat menggabungkan lebih dari empat lagu, setiap kelompok ditulis sebagai PCM. Kalau berkas antaranya sudah di-encode, setiap tahap berikutnya harus mendekode lalu meng-encode ulang, dan pekerjaan encoding berlipat untuk setiap tahap tambahan.",
+  },
+];
+---
+
+<Mandiri
+  judul="Panduan developer"
+  keterangan="Susunan kode LofiLoop, cara membangunnya, dan keputusan rancangan beserta alasannya."
+>
+  <section class="mandiri-pembuka">
+    <div class="mandiri-pembuka-dalam">
+      <p class="label-atas">Developer</p>
+      <h1>Cara kodenya disusun, dan kenapa begitu</h1>
+      <p class="pembuka-teks">
+        Halaman ini menjelaskan hal yang tidak terlihat dari luar, supaya orang yang
+        membuka kodenya tidak perlu menebak, dan tidak memperbaiki sesuatu yang memang
+        sengaja dibuat begitu.
+      </p>
+    </div>
+  </section>
+
+  <!-- Aturan yang mengikat seluruh susunan, ditaruh lebih dulu karena ini yang
+       menjelaskan kenapa pembagiannya seperti ini. Bagian ini diberi judul seperti
+       bagian lain, supaya tidak ada satu bagian pun yang tampil tanpa penanda. -->
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+    <h2>Aturan yang mengikat seluruh susunannya</h2>
+
+    <div class="aturan-utama">
+      <p>
+        <strong>Logika pemrosesan tidak tahu apa-apa soal tampilan.</strong> Semua
+        pekerjaan berat ada di <code>crates/engine</code>, dan bagian lain hanya
+        memanggilnya. Karena itu aplikasi desktop dan program baris perintah bisa
+        memakai mesin yang sama persis, dan pengujian otomatis cukup dilakukan sekali.
+      </p>
+    </div>
+    </div>
+  </section>
+
+  <!-- Tiap bagian program jadi satu baris yang bisa dibuka. Yang terlihat lebih
+       dulu hanya empat nama bagian, bukan tiga puluh baris tabel. -->
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+    <h2>Susunan program</h2>
+    <p>
+      Empat bagian. Buka salah satunya untuk melihat berkas apa saja di dalamnya.
+    </p>
+
+    <div class="daftar-bagian">
+      {bagianProgram.map((b, i) => (
+        <details class="bagian-satu" open={i === 0}>
+          <summary>
+            <code class="bagian-nama">{b.nama}</code>
+            <span class="bagian-jumlah">{b.berkas.length} berkas</span>
+          </summary>
+          <div class="bagian-isi">
+            <p class="bagian-arti">{b.arti}</p>
+            <dl class="berkas-daftar">
+              {b.berkas.map((f) => (
+                <div>
+                  <dt><code>{f.nama}</code></dt>
+                  <dd>{f.tugas}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </details>
+      ))}
+    </div>
+    </div>
+  </section>
+
+  <!-- Membangun situs dan aplikasi disandingkan, karena keduanya sama-sama
+       perintah yang dijalankan, hanya di folder berbeda. -->
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+    <h2>Menjalankan di mesinmu</h2>
+    <p>
+      Dua hal berbeda: situs dokumentasi ini, dan aplikasi desktopnya. Keduanya
+      perintahnya dijalankan di folder yang berbeda.
+    </p>
+
+    <div class="dua-alur">
+      <div class="alur">
+        <div class="alur-judul">Situs dokumentasi</div>
+        <p class="alur-catatan">
+          Astro dengan Svelte, dikelola memakai <strong>pnpm</strong>. Semua perintah
+          dijalankan dari dalam folder <code>website</code>.
+        </p>
+        <pre><code>cd website
+pnpm install
+pnpm run dev</code></pre>
+        <dl class="perintah-daftar">
+          {perintahSitus.map((p) => (
+            <div>
+              <dt><code>{p.nama}</code></dt>
+              <dd>{p.arti}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+
+      <div class="alur">
+        <div class="alur-judul">Aplikasi desktop</div>
+        <p class="alur-catatan">
+          Butuh Rust beserta rantai perkakas C++ dari Visual Studio, dan Node.js untuk
+          antarmukanya.
+        </p>
+        <pre><code>cargo build --release
+cargo test --workspace</code></pre>
+        <dl class="perintah-daftar">
+          {perintahRust.map((p) => (
+            <div>
+              <dt><code>{p.nama}</code></dt>
+              <dd>{p.arti}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </div>
+
+    <div class="kunci">
+      Seluruh pemeriksaan di atas berjalan otomatis di GitHub Actions setiap ada
+      dorongan ke cabang utama. Rilis dibangun di sana juga, bukan di komputer
+      pengembang, sehingga hasilnya bisa ditelusuri ke satu komit tertentu.
+    </div>
+    </div>
+  </section>
+
+  <!-- Menyusun data versi, dibahas terpisah karena ini yang perlu dikerjakan
+       setiap kali ada versi baru. -->
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+    <h2>Menyusun data versi</h2>
+    <p>
+      Halaman rilis membaca <code>src/data/versi.json</code>, yang disusun dari
+      <code>CHANGELOG.md</code> di akar repo ditambah keterangan berkas dari API
+      GitHub. Setelah menambah versi baru di changelog, jalankan:
+    </p>
+
+    <pre><code>pnpm run ambil-versi</code></pre>
+
+    <p>
+      Skrip itu memakai perintah <code>gh</code> untuk menghubungi GitHub, karena
+      dengan begitu token yang sudah ada di mesinmu ikut terpakai. Tanpa token, batas
+      permintaan GitHub hanya 60 per jam per alamat IP, dan itu mudah habis.
+    </p>
+
+    <div class="kunci">
+      Kalau kamu sedang bekerja tanpa jaringan, jalankan
+      <code>pnpm run ambil-versi --offline</code>. Datanya tetap tersusun dari
+      changelog, hanya tautan unduhannya yang kosong. Build tidak gagal karena ini.
+    </div>
+    </div>
+  </section>
+
+  <!-- Keputusan rancangan: bagian yang paling sering perlu dibaca sebelum
+       mengubah kode orang lain. -->
+  <section class="mandiri-bagian bagian-keputusan">
+    <div class="mandiri-dalam">
+    <h2>Keputusan yang sengaja dibuat begitu</h2>
+    <p>
+      Empat hal di bawah ini terlihat seperti keanehan kalau dibaca tanpa konteks.
+      Masing-masing ada alasannya, dan sebagian ditemukan lewat pengukuran yang
+      hasilnya berlawanan dengan dugaan awal.
+    </p>
+
+    <div class="keputusan-daftar">
+      {keputusan.map((k) => (
+        <div class="keputusan-satu">
+          <h3>{k.judul}</h3>
+          <p>{k.isi}</p>
+        </div>
+      ))}
+    </div>
+    </div>
+  </section>
+
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+    <h2>Menyumbang</h2>
+    <p>
+      Laporan isu dan usulan sangat diterima. Yang paling membantu adalah laporan yang
+      menyertakan versi yang dipakai, jenis berkas yang diproses, dan pesan galatnya
+      kalau ada.
+    </p>
+    <p>
+      Untuk perubahan kode, jalankan <code>cargo fmt</code>, <code>cargo clippy</code>,
+      dan <code>cargo test</code> sebelum mengirim. Ketiganya juga berjalan di CI, dan
+      peringatan clippy diperlakukan sebagai galat.
+    </p>
+
+    <a class="mandiri-lanjut" href="https://github.com/samuelindra123/lofiloop">
+      Buka repositori di GitHub
+      <span class="arah" aria-hidden="true">→</span>
+    </a>
+    </div>
+  </section>
+</Mandiri>
+
+<style>
+  .label-atas {
+    font-family: var(--font-angka);
+    font-size: 12.5px;
+    color: var(--kuningan);
+    margin: 0 0 var(--j3);
+  }
+
+  /* Aturan utama ditampilkan sebagai satu blok menonjol, karena ia menjelaskan
+     seluruh pembagian program di bawahnya. */
+  .aturan-utama {
+    border: 1px solid var(--garis-tegas);
+    border-left: 3px solid var(--kuningan);
+    border-radius: 0 var(--r-panel) var(--r-panel) 0;
+    background: var(--arang-2);
+    padding: var(--j5);
+  }
+
+  .aturan-utama p {
+    margin: 0;
+    font-size: 15.5px;
+    line-height: 1.65;
+    color: var(--tulang-redup);
+    max-width: 64ch;
+  }
+
+  /* ---------- Daftar bagian program ---------- */
+
+  .daftar-bagian {
+    border-top: 1px solid var(--garis);
+    margin-top: var(--j5);
+  }
+
+  .bagian-satu {
+    border-bottom: 1px solid var(--garis);
+  }
+
+  .bagian-satu > summary {
+    display: flex;
+    align-items: baseline;
+    gap: var(--j4);
+    padding: var(--j4) 0;
+    cursor: pointer;
+    list-style: none;
+    min-height: 48px;
+  }
+
+  .bagian-satu > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .bagian-satu > summary::before {
+    content: "▸";
+    color: var(--tulang-samar);
+    flex: none;
+    font-size: 12px;
+  }
+
+  .bagian-satu[open] > summary::before {
+    content: "▾";
+  }
+
+  .bagian-nama {
+    font-size: 15px;
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--tulang);
+  }
+
+  .bagian-jumlah {
+    margin-left: auto;
+    font-size: 12.5px;
+    color: var(--tulang-samar);
+  }
+
+  .bagian-isi {
+    padding: 0 0 var(--j5) var(--j5);
+  }
+
+  .bagian-arti {
+    font-size: 14px;
+    color: var(--tulang-samar);
+    margin: 0 0 var(--j3);
+    max-width: 60ch;
+  }
+
+  .berkas-daftar {
+    margin: 0;
+    border-top: 1px solid var(--garis);
+  }
+
+  .berkas-daftar > div {
+    display: grid;
+    grid-template-columns: minmax(0, 190px) minmax(0, 1fr);
+    gap: var(--j4);
+    padding: var(--j2) 0;
+    border-bottom: 1px solid var(--garis);
+  }
+
+  .berkas-daftar dt code {
+    font-size: 13px;
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--tulang);
+  }
+
+  .berkas-daftar dd {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--tulang-redup);
+  }
+
+  /* ---------- Dua alur build ---------- */
+
+  .dua-alur {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--j6);
+    margin-top: var(--j5);
+  }
+
+  .alur {
+    border: 1px solid var(--garis);
+    border-radius: var(--r-panel);
+    padding: var(--j5);
+    background: var(--arang-2);
+    min-width: 0;
+  }
+
+  .alur-judul {
+    font-family: var(--font-judul);
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: var(--j2);
+  }
+
+  .alur-catatan {
+    font-size: 14px;
+    color: var(--tulang-samar);
+    margin: 0 0 var(--j4);
+  }
+
+  .alur pre {
+    margin-bottom: var(--j4);
+    font-size: 12.5px;
+  }
+
+  .perintah-daftar {
+    margin: 0;
+    border-top: 1px solid var(--garis);
+  }
+
+  .perintah-daftar > div {
+    padding: var(--j2) 0;
+    border-bottom: 1px solid var(--garis);
+  }
+
+  .perintah-daftar dt code {
+    font-size: 12.5px;
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--kuningan);
+    word-break: break-word;
+  }
+
+  .perintah-daftar dd {
+    margin: 2px 0 0;
+    font-size: 13px;
+    color: var(--tulang-samar);
+    line-height: 1.5;
+  }
+
+  .kunci {
+    border-left: 2px solid var(--kuningan);
+    padding: var(--j1) 0 var(--j1) var(--j5);
+    margin-top: var(--j5);
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--tulang-redup);
+    max-width: 64ch;
+  }
+
+  /* ---------- Keputusan rancangan ---------- */
+
+  .bagian-keputusan {
+    background: var(--arang-2);
+  }
+
+  .keputusan-daftar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--j5);
+    margin-top: var(--j5);
+  }
+
+  .keputusan-satu {
+    border-top: 1px solid var(--garis-tegas);
+    padding-top: var(--j4);
+  }
+
+  .keputusan-satu h3 {
+    font-size: 14.5px;
+    font-family: var(--font-isi);
+    font-weight: 600;
+    margin: 0 0 var(--j2);
+  }
+
+  .keputusan-satu p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--tulang-samar);
+  }
+
+  @media (max-width: 640px) {
+    .berkas-daftar > div {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2px;
+    }
+  }
+</style>

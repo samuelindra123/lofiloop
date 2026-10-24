@@ -1,0 +1,69 @@
+---
+/**
+ * Kerangka beranda.
+ *
+ * Berbeda dari kerangka dokumen dalam tiga hal yang disengaja:
+ *
+ * 1. Tanpa bilah samping. Beranda tidak punya struktur yang perlu dijelajahi, yang
+ *    dibutuhkan pembaca justru alur yang mengarahkan dari masalah ke unduhan.
+ * 2. Lebar penuh sampai tepi jendela. Bagian angka dan video bisa memakai seluruh
+ *    lebar, dan itu yang membuat beranda terasa lapang, bukan seperti dokumen.
+ * 3. Jarak antar bagian lebih besar dan tipografi judulnya lebih besar, karena
+ *    beranda dibaca sekilas sambil menggulir, bukan dibaca kata per kata.
+ *
+ * Yang tetap sama: kepala, kaki, dan tombol tema. Itu yang membuat beranda dan
+ * halaman dokumen tetap terasa satu situs.
+ */
+import "../gaya/global.css";
+import "../gaya/beranda.css";
+import Kepala from "../komponen/Kepala.astro";
+import Kaki from "../komponen/Kaki.astro";
+
+const { judul, keterangan = "" } = Astro.props;
+const kanonik = new URL(Astro.url.pathname, Astro.site ?? "https://lofiloop.vercel.app");
+---
+
+<!doctype html>
+<html lang="id" data-tema="gelap">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{judul}</title>
+    {keterangan && <meta name="description" content={keterangan} />}
+    <link rel="canonical" href={kanonik.href} />
+    <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+    <meta name="color-scheme" content="dark light" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={judul} />
+    {keterangan && <meta property="og:description" content={keterangan} />}
+    <meta property="og:url" content={kanonik.href} />
+
+    <script is:inline>
+      (() => {
+        try {
+          const tersimpan = localStorage.getItem("lofiloop-tema");
+          if (tersimpan === "terang" || tersimpan === "gelap") {
+            document.documentElement.dataset.tema = tersimpan;
+          } else if (window.matchMedia("(prefers-color-scheme: light)").matches) {
+            document.documentElement.dataset.tema = "terang";
+          }
+        } catch {
+          // localStorage bisa diblokir. Kalau begitu, tema gelap dipakai apa adanya.
+        }
+      })();
+    </script>
+  </head>
+
+  <body>
+    <a class="lewati" href="#isi">Lewati ke isi</a>
+
+    <Kepala />
+
+    <main id="isi">
+      <slot />
+    </main>
+
+    <Kaki />
+  </body>
+</html>

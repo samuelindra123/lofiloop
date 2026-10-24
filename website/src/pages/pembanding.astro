@@ -1,0 +1,158 @@
+---
+import Mandiri from "../layouts/Mandiri.astro";
+
+/**
+ * Dibanding alat lain.
+ *
+ * Halaman ini membandingkan berdasarkan hal yang bisa diperiksa: perintah FFmpeg
+ * yang dijalankan, dan konsekuensinya pada waktu serta ukuran berkas. Tidak ada
+ * perbandingan yang menyebut nama alat lain, karena mengklaim alat lain lebih buruk
+ * tanpa mengukurnya adalah klaim tanpa bukti.
+ *
+ * Yang dibandingkan di sini adalah caranya, bukan mereknya.
+ */
+const cara = [
+  {
+    nama: "Encode ulang seluruh berkas",
+    perintah: "ffmpeg -stream_loop -1 -i klip.mp4 -t 3600 -c:v libx264 hasil.mp4",
+    waktu: "Sejam lebih, karena seluruh 8 jam diproses",
+    sambungan: "Kasar di setiap sambungan, karena tidak ada peleburan",
+    memori: "Tumbuh seiring durasi",
+    catatan:
+      "Paling mudah dijelaskan dan paling lambat. Cocok untuk klip yang memang harus dipotong di titik tertentu.",
+  },
+  {
+    nama: "Salinan stream tanpa crossfade",
+    perintah: "ffmpeg -stream_loop 400 -i klip.mp4 -c copy -t 3600 hasil.mp4",
+    waktu: "Cepat, hanya menulis ulang berkas",
+    sambungan: "Ada lompatan terlihat di setiap batas",
+    memori: "Rendah dan tetap",
+    catatan:
+      "Pada pengukuran LofiLoop, rasio sambungannya 10,82, jauh di atas batas 1,5. Sangat cepat, dan sambungannya terlihat jelas.",
+  },
+  {
+    nama: "LofiLoop",
+    perintah: "lofiloop-cli --video klip.mp4 --audio lagu.mp3 --duration 1h -o hasil.mp4",
+    waktu: "104 detik untuk 1 jam video 1080p",
+    sambungan: "Rasio 1,10, di bawah rata-rata gerakan sekitarnya",
+    memori: "Puncak 29 MB, tidak tumbuh seiring durasi",
+    catatan:
+      "Menyusun satu putaran dengan crossfade lebih dulu, lalu mengulangnya sebagai salinan paket.",
+  },
+];
+---
+
+<Mandiri
+  judul="Dibanding alat lain"
+  keterangan="Perbandingan cara kerja antara encode ulang, salinan stream tanpa crossfade, dan pendekatan yang dipakai LofiLoop."
+>
+  <section class="mandiri-pembuka">
+    <div class="mandiri-pembuka-dalam">
+    <h1>Dibanding alat lain</h1>
+    <p class="pembuka-teks">
+      Ada beberapa cara membuat video panjang dari klip pendek, dan semuanya benar.
+      Yang berbeda adalah biayanya. Halaman ini membandingkan caranya, memakai angka
+      dari pengukuran LofiLoop sendiri.
+    </p>
+    </div>
+  </section>
+
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+    <h2>Tiga cara, tiga hasil</h2>
+    <p class="prosa">
+      Semua angka di bawah diukur pada mesin uji yang sama, dengan sumber berupa klip
+      1080p25 10 detik dan hasil 1 jam.
+    </p>
+
+    {cara.map((c) => (
+      <div class="kartu-cara">
+        <h3>{c.nama}</h3>
+
+        <pre><code>{c.perintah}</code></pre>
+
+        <dl class="daftar-angka">
+          <div>
+            <dt>Waktu render</dt>
+            <dd>{c.waktu}</dd>
+          </div>
+          <div>
+            <dt>Kualitas sambungan</dt>
+            <dd>{c.sambungan}</dd>
+          </div>
+          <div>
+            <dt>Pemakaian memori</dt>
+            <dd>{c.memori}</dd>
+          </div>
+        </dl>
+
+        <p class="catatan-cara">{c.catatan}</p>
+      </div>
+    ))}
+    </div>
+  </section>
+
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+    <h2>Kalau kamu hanya butuh loop cepat dan tidak peduli sambungan</h2>
+    <p>
+      Cara kedua memang jauh lebih cepat, dan itu bukan kelemahan. Kalau kamu memakai
+      videonya sebagai latar dengan volume kecil, atau sambungannya kebetulan jatuh di
+      bagian yang gelap dan tenang, lompatan itu mungkin tidak pernah terlihat.
+    </p>
+    <p>
+      Yang perlu kamu tahu adalah memilihnya dengan sadar. Halaman ini ada supaya kamu
+      tahu bedanya sebelum memilih, bukan supaya satu cara terlihat lebih baik dari
+      yang lain.
+    </p>
+    </div>
+  </section>
+
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+    <h2>Apa yang tidak dibandingkan di sini</h2>
+    <p>
+      Halaman ini tidak menyebut nama alat lain, dan itu disengaja. Membandingkan fitur
+      dengan alat yang tidak diukur di mesin ini hanya akan menghasilkan klaim yang tidak
+      bisa diperiksa kebenarannya.
+    </p>
+    <p>
+      Yang bisa kamu periksa sendiri: seluruh kode LofiLoop terbuka di
+      <a href="https://github.com/samuelindra123/lofiloop">repositori GitHub</a>, semua
+      angka pengukuran ada di <a href="/pengukuran">halaman pengukuran</a>, dan cara
+      menghitungnya dijelaskan di <a href="/cara-kerja">halaman cara kerja</a>.
+    </p>
+    </div>
+  </section>
+</Mandiri>
+
+<style>
+  .kartu-cara {
+    border-top: 1px solid var(--garis);
+    padding-top: var(--j5);
+    margin-top: var(--j5);
+  }
+
+  .kartu-cara h3 {
+    margin-top: 0;
+    font-size: 1.2rem;
+  }
+
+  .kartu-cara pre {
+    margin-bottom: var(--j4);
+  }
+
+  .kartu-cara pre code {
+    /* Perintah panjang dibungkus, bukan dipaksa satu baris, supaya tidak
+       memaksa halaman bisa digulir ke samping di layar kecil. */
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .catatan-cara {
+    font-size: 14px;
+    color: var(--tulang-samar);
+    margin: 0;
+    max-width: var(--lebar-isi);
+  }
+</style>

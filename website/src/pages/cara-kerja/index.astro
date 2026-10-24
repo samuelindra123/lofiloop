@@ -1,0 +1,444 @@
+---
+import Mandiri from "../../layouts/Mandiri.astro";
+
+/**
+ * Cara kerja.
+ *
+ * Halaman ini menjelaskan kenapa LofiLoop cepat, dan tiga keputusan teknis yang
+ * menjelaskan hampir seluruh perilakunya.
+ *
+ * Susunannya sengaja tidak seragam. Setiap bagian memakai bentuk yang sesuai
+ * isinya: yang berupa perbandingan angka memakai tabel, yang berupa satu temuan
+ * penting memakai satu angka besar, dan yang berupa penjelasan memakai prosa.
+ * Keseragaman bentuk justru akan membuat tiga hal yang berbeda terlihat sama
+ * pentingnya.
+ *
+ * Seluruh angka di halaman ini dari docs/benchmark.md, diukur pada satu mesin.
+ */
+
+// Tiga temuan utama, masing-masing dengan angka yang bisa dibandingkan. Angka
+// inilah yang membuat halaman ini berbeda dari penjelasan biasa: setiap klaim
+// punya ukuran, dan setiap ukuran punya pembanding.
+const temuan = [
+  {
+    nomor: "01",
+    judul: "Crossfade harus berakhir tepat di frame pertama",
+    ringkas:
+      "Cara yang tampak masuk akal adalah menyambung ujung klip ke awal klip dengan crossfade yang berakhir di sekitar frame pertama. Pengukuran menunjukkan cara itu gagal.",
+    angka: [
+      { label: "Berakhir tepat di frame pertama", nilai: "1,10", lulus: true },
+      { label: "Berakhir satu frame terlalu awal", nilai: "1,65", lulus: false },
+      { label: "Loop mentah tanpa crossfade", nilai: "10,82", lulus: false },
+    ],
+    kunci: "1,10",
+    satuan: "rasio sambungan",
+    batas: "Batas kelulusan 1,5",
+    catatan:
+      "Angka 1,10 berarti selisih antar frame di sambungan hanya 10 persen di atas rata-rata selisih di sekitarnya. Artinya sambungannya tidak lebih kasar daripada gerakan biasa di dalam videonya sendiri.",
+    sebab:
+      "Karena itu satu putaran dibangun dengan nomor frame, bukan dengan detik. Dengan detik, frame terakhir putaran bukan berarti 100 persen klip, dan selisih itulah yang muncul sebagai lompatan.",
+  },
+  {
+    nomor: "02",
+    judul: "Encoder perangkat keras merusak sambungan",
+    ringkas:
+      "Encoder perangkat keras seharusnya lebih baik karena memakai unit grafis, dan memang jauh lebih cepat. Tetapi pada pengujian, sambungannya konsisten gagal di setiap batas unit.",
+    angka: [
+      { label: "h264_qsv, Intel UHD 605", nilai: "1,73", lulus: false },
+      { label: "libx264, crossfade 1 detik", nilai: "1,38", lulus: true },
+      { label: "libx264, crossfade 2 detik", nilai: "1,05", lulus: true },
+    ],
+    kunci: "1,73",
+    satuan: "rasio h264_qsv",
+    batas: "Konsisten gagal di setiap sambungan",
+    catatan:
+      "Dugaannya, encoder perangkat keras menaruh artefak di frame pertama setiap GOP. Karena setiap pengulangan dimulai tepat di keyframe, artefak itu muncul persis di sambungan, berulang, dan terlihat.",
+    sebab:
+      "Karena itu libx264 menjadi pilihan bawaan. h264_qsv tetap tersedia untuk keperluan yang mengutamakan kecepatan, dengan konsekuensi sambungan lebih kasar.",
+  },
+  {
+    nomor: "03",
+    judul: "Audio diulang sebagai paket, bukan di-encode ulang",
+    ringkas:
+      "Encode AAC memakan waktu sekitar 11 kali durasi aslinya. Kalau audio 3 jam diulang lewat jalur streaming, sekitar 20 menit habis hanya untuk bagian audionya.",
+    angka: [
+      { label: "Loop PCM lalu encode streaming", nilai: "427,4 dtk", lulus: false },
+      { label: "Encode sekali, lalu ulang paket AAC", nilai: "4 dtk", lulus: true },
+      { label: "Encode AAC, 120 dtk audio", nilai: "10,9 dtk", lulus: false },
+    ],
+    kunci: "107",
+    satuan: "kali lebih cepat",
+    batas: "427 detik menjadi 4 detik",
+    catatan:
+      "Supaya batas unit jatuh tepat di batas frame AAC, panjang unit dibulatkan ke kelipatan 1024 sample. Pada 44,1 kHz, itu berarti 1206 frame atau 28,0033 detik.",
+    sebab:
+      "Konsekuensinya, loudnorm dan normalisasi per-sample tidak bisa dipakai saat pengulangan salinan. Keduanya harus dibakar ke unit audio sebelum di-encode.",
+  },
+];
+
+// Perbandingan dua pendekatan, ditaruh lebih dulu sebelum temuan teknis, karena
+// inilah inti produknya dan yang paling perlu dipahami sebelum membaca detailnya.
+const duaPendekatan = [
+  {
+    judul: "Memproses ulang seluruh berkas",
+    isi: "Seluruh durasi hasil diproses dari awal. Untuk video 8 jam, kamu menunggu selama 8 jam, dan memorinya tumbuh seiring panjang videonya.",
+    angka: [
+      { label: "Waktu", nilai: "sepanjang durasi hasil" },
+      { label: "Memori", nilai: "tumbuh seiring durasi" },
+    ],
+  },
+  {
+    judul: "Menyusun satu putaran, lalu mengulangnya",
+    isi: "Satu putaran disusun lebih dulu, lalu diulang sebagai salinan paket. Biaya pemrosesan dibayar sekali, dan memorinya tetap.",
+    angka: [
+      { label: "Waktu", nilai: "104 dtk untuk 1 jam" },
+      { label: "Memori", nilai: "puncak 29 MB" },
+    ],
+  },
+];
+---
+
+<Mandiri
+  judul="Cara kerja"
+  keterangan="Kenapa LofiLoop cepat: pengulangan di tingkat paket, sambungan yang berakhir tepat di frame pertama, dan penataan nomor frame."
+>
+  <section class="mandiri-pembuka">
+    <div class="mandiri-pembuka-dalam">
+      <p class="label-atas">Penjelasan teknis</p>
+      <h1>Kenapa sambungannya tidak terasa, dan kenapa cepat</h1>
+      <p class="pembuka-teks">
+        Tiga keputusan teknis menjelaskan hampir seluruh perilaku LofiLoop, termasuk
+        kecepatannya dan beberapa batasannya. Semuanya lahir dari pengukuran, dan dua
+        di antaranya berlawanan dengan dugaan awal.
+      </p>
+    </div>
+  </section>
+
+  <!--
+    Inti produknya lebih dulu, sebelum masuk ke temuan teknis. Susunannya
+    berdampingan supaya perbedaannya terlihat sebelum dibaca.
+  -->
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+      <h2>Masalahnya bukan sekadar mengulang</h2>
+
+      <div class="banding">
+        <div>
+          <h3>{duaPendekatan[0].judul}</h3>
+          <p>{duaPendekatan[0].isi}</p>
+          <dl class="mini-angka">
+            {duaPendekatan[0].angka.map((a) => (
+              <div>
+                <dt>{a.label}</dt>
+                <dd>{a.nilai}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+        <div class="jawaban">
+          <h3>{duaPendekatan[1].judul}</h3>
+          <p>{duaPendekatan[1].isi}</p>
+          <dl class="mini-angka">
+            {duaPendekatan[1].angka.map((a) => (
+              <div>
+                <dt>{a.label}</dt>
+                <dd>{a.nilai}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </div>
+
+      <p class="catatan-bawah">
+        Setiap awal putaran harus berupa keyframe, karena kalau tidak, pemutaran
+        hasilnya akan tersendat di setiap sambungan. Karena itu LofiLoop menetapkan
+        GOP dua detik yang tertutup dan tanpa scenecut.
+      </p>
+    </div>
+  </section>
+
+  <!--
+    Tiga temuan, masing-masing satu bagian. Bentuknya sengaja identik di sini,
+    karena ketiganya memang setara: sama-sama temuan yang mengubah implementasi.
+  -->
+  {temuan.map((t) => (
+    <section class="mandiri-bagian">
+      <div class="mandiri-dalam">
+        <div class="temuan-kepala">
+          <span class="temuan-nomor">{t.nomor}</span>
+          <h2>{t.judul}</h2>
+        </div>
+
+        <p class="pengantar-temuan">{t.ringkas}</p>
+
+        <div class="temuan-isi">
+          <!-- Angka utama di kiri, daftar pembanding di kanan. -->
+          <div class="temuan-utama">
+            <div class="angka-besar">
+              <span class="nilai">{t.kunci}</span>
+            </div>
+            <div class="angka-satuan">{t.satuan}</div>
+            <div class="angka-batas">{t.batas}</div>
+          </div>
+
+          <div class="temuan-daftar">
+            <dl class="daftar-angka">
+              {t.angka.map((a) => (
+                <div>
+                  <dt>{a.label}</dt>
+                  <dd class:list={[a.lulus ? "lulus" : "gagal"]}>{a.nilai}</dd>
+                </div>
+              ))}
+            </dl>
+
+            <p class="temuan-catatan">{t.catatan}</p>
+          </div>
+        </div>
+
+        <div class="sebab">
+          <div class="sebab-judul">Yang berubah karenanya</div>
+          <p>{t.sebab}</p>
+        </div>
+      </div>
+    </section>
+  ))}
+
+  <!--
+    Penutup: satu penjelasan yang berlaku untuk semua pengaturan, karena ini yang
+    paling sering disalahpahami.
+  -->
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+      <h2>Kenapa menaikkan frame per detik tidak menambah apa pun</h2>
+      <p>
+        Klip 24 frame per detik hanya berisi 24 gambar baru setiap detiknya. Kalau kamu
+        meminta keluaran 60 frame per detik, FFmpeg harus mengisi 36 frame tambahan, dan
+        satu-satunya cara yang bisa dilakukannya adalah menggandakan gambar yang sudah ada.
+      </p>
+      <p>
+        Jadi gerakannya tidak menjadi lebih halus, karena gambar yang lebih halus memang
+        tidak pernah ada di berkas asalnya. Yang bertambah hanya jumlah frame yang harus
+        disimpan, sehingga berkasnya membengkak dan render menjadi lebih lama.
+      </p>
+
+      <div class="banding banding-tipis">
+        <div>
+          <h3>Sama halnya dengan resolusi</h3>
+          <p>
+            Klip 720p yang dikeluarkan pada 1080p tetap terlihat seperti 720p, hanya
+            ukurannya lebih besar. Pilihan itu tetap tersedia karena kadang kamu perlu
+            menyamakan bentuk dengan materi lain.
+          </p>
+        </div>
+        <div>
+          <h3>Yang benar-benar menghemat ruang</h3>
+          <p>
+            Bitrate pengaruhnya paling langsung, dan tidak mengorbankan apa pun selain
+            ukuran. Kalau berkasnya terlalu besar, turunkan bitrate lebih dulu.
+          </p>
+        </div>
+      </div>
+
+      <a class="mandiri-lanjut" href="/pengukuran">
+        Semua angkanya, dan cara mengukurnya
+        <span class="arah" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+</Mandiri>
+
+<style>
+  /* Label kecil di atas judul halaman. Bukan lencana berbentuk pil, melainkan
+     satu baris huruf angka yang menandai jenis halaman. */
+  .label-atas {
+    font-family: var(--font-angka);
+    font-size: 12.5px;
+    color: var(--kuningan);
+    margin: 0 0 var(--j3);
+  }
+
+  /* ---------- Temuan ---------- */
+
+  .temuan-kepala {
+    display: flex;
+    align-items: baseline;
+    gap: var(--j4);
+    margin-bottom: var(--j3);
+  }
+
+  /* Nomor temuan memakai huruf angka besar dan warna redup. Ia penanda urutan,
+     bukan hiasan, jadi ukurannya cukup untuk dilihat tapi tidak menyaingi judul. */
+  .temuan-nomor {
+    font-family: var(--font-angka);
+    font-size: 13px;
+    color: var(--kuningan);
+    flex: none;
+    padding-top: 4px;
+  }
+
+  .temuan-kepala h2 {
+    margin-bottom: 0;
+  }
+
+  .pengantar-temuan {
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--tulang-redup);
+    max-width: 62ch;
+    margin-bottom: var(--j6);
+  }
+
+  .temuan-isi {
+    display: grid;
+    grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+    gap: var(--j7);
+    align-items: start;
+    margin-bottom: var(--j5);
+  }
+
+  /* Angka utama ditempatkan seperti panel instrumen: satu angka besar, dengan
+     satuan dan keterangan batasnya. */
+  .temuan-utama {
+    border: 1px solid var(--garis-tegas);
+    border-radius: var(--r-panel);
+    background: var(--arang-2);
+    padding: var(--j5);
+  }
+
+  .angka-besar .nilai {
+    font-family: var(--font-angka);
+    font-variant-numeric: tabular-nums;
+    font-size: clamp(2.6rem, 5vw, 3.4rem);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.035em;
+    color: var(--kuningan);
+  }
+
+  .angka-satuan {
+    font-size: 13.5px;
+    color: var(--tulang);
+    margin-top: var(--j3);
+  }
+
+  .angka-batas {
+    font-size: 12.5px;
+    color: var(--tulang-samar);
+    margin-top: 2px;
+    line-height: 1.45;
+  }
+
+  .temuan-daftar {
+    min-width: 0;
+  }
+
+  /* Angka lulus dan gagal dibedakan warna dan teksnya sekaligus, bukan warna
+     saja, supaya tetap terbaca oleh orang yang tidak membedakan warna. */
+  .daftar-angka dd.lulus {
+    color: var(--kuningan);
+  }
+
+  .daftar-angka dd.gagal {
+    color: var(--tanah);
+  }
+
+  .temuan-catatan {
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--tulang-samar);
+    margin: var(--j4) 0 0;
+    max-width: 60ch;
+  }
+
+  /* Kotak "yang berubah karenanya": memisahkan kesimpulan dari penjelasan, supaya
+     pembaca yang hanya ingin tahu akibatnya bisa melewati bagian di atasnya. */
+  .sebab {
+    border-left: 2px solid var(--kuningan);
+    padding: var(--j1) 0 var(--j1) var(--j5);
+  }
+
+  .sebab-judul {
+    font-size: 12px;
+    color: var(--tulang-samar);
+    margin-bottom: var(--j1);
+  }
+
+  .sebab p {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--tulang-redup);
+    max-width: 62ch;
+  }
+
+  /* ---------- Angka kecil di dalam kartu banding ---------- */
+
+  .mini-angka {
+    margin: var(--j4) 0 0;
+    border-top: 1px solid var(--garis);
+  }
+
+  .mini-angka > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--j4);
+    padding: var(--j2) 0;
+    border-bottom: 1px solid var(--garis);
+  }
+
+  .mini-angka dt {
+    font-size: 13px;
+    color: var(--tulang-samar);
+  }
+
+  .mini-angka dd {
+    margin: 0;
+    font-family: var(--font-angka);
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+    color: var(--tulang);
+    text-align: right;
+  }
+
+  .catatan-bawah {
+    font-size: 14px;
+    color: var(--tulang-samar);
+    margin-top: var(--j5);
+    max-width: 62ch;
+  }
+
+  /* Banding tanpa kartu, dipakai untuk penjelasan ringan di akhir halaman. */
+  .banding-tipis {
+    border: 0;
+    margin-top: var(--j5);
+    gap: var(--j7);
+  }
+
+  .banding-tipis > div {
+    padding: 0;
+  }
+
+  .banding-tipis > div + div {
+    border-left: 1px solid var(--garis);
+    padding-left: var(--j7);
+  }
+
+  @media (max-width: 780px) {
+    .temuan-isi {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--j5);
+    }
+
+    .banding-tipis {
+      gap: var(--j5);
+    }
+
+    .banding-tipis > div + div {
+      border-left: 0;
+      border-top: 1px solid var(--garis);
+      padding-left: 0;
+      padding-top: var(--j5);
+    }
+  }
+</style>

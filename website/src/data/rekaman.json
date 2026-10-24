@@ -1,0 +1,12 @@
+{
+  "catatan": [
+    "Rekaman demo ditampilkan utuh: satu berkas, tanpa potongan, tanpa pemangkasan gambar.",
+    "Tidak ada 'crop' pada rekaman ini. Versi sebelumnya memangkas tepi gambar dan itu justru membuang bilah judul berisi lambang aplikasi.",
+    "Rekaman aslinya disimpan di rekaman-asli/, di luar folder situs, sehingga tidak ikut ter-deploy."
+  ],
+  "klip": "/video/demo-lofiloop.mp4",
+  "poster": "/video/poster.jpg",
+  "durasi": 3,
+  "lebar": 960,
+  "tinggi": 540
+}

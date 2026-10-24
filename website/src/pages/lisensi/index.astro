@@ -1,0 +1,149 @@
+---
+import Dokumen from "../../layouts/Dokumen.astro";
+
+/**
+ * Lisensi.
+ *
+ * Halaman ini memuat dua lisensi yang berbeda, dan pemisahan itu penting: kode
+ * LofiLoop berlisensi MIT, sedangkan FFmpeg yang disertakan punya lisensinya
+ * sendiri yang tidak bisa disatukan dengan MIT. Menyebut keduanya di satu tempat
+ * supaya tidak ada yang salah paham soal apa yang boleh dilakukan dengan hasilnya.
+ */
+const izin = [
+  "Memakai perangkat lunaknya, untuk keperluan pribadi maupun komersial",
+  "Mengubah kode sumbernya sesuai kebutuhanmu",
+  "Menyebarluaskan salinan, termasuk yang sudah diubah",
+  "Menggabungkannya ke dalam perangkat lunak lain",
+];
+
+const syarat = [
+  "Sertakan salinan lisensi dan keterangan hak cipta aslinya",
+  "Tidak boleh memakai nama penulis untuk mempromosikan hasil ubahanmu tanpa izin",
+];
+---
+
+<Dokumen
+  judul="Lisensi"
+  keterangan="Lisensi LofiLoop (MIT) dan keterangan lisensi FFmpeg yang disertakan."
+  aktif="/lisensi"
+>
+  <div class="judul-halaman">
+    <h1>Lisensi</h1>
+    <p class="pembuka">
+      Ada dua lisensi berbeda yang perlu kamu ketahui, satu untuk LofiLoop dan satu lagi
+      untuk FFmpeg yang ikut disertakan.
+    </p>
+  </div>
+
+  <section class="bagian">
+    <h2>LofiLoop: MIT</h2>
+    <p>
+      Kode LofiLoop berlisensi MIT. Itu lisensi yang paling memberi kebebasan, dan
+      tujuannya memang supaya kamu bisa memakainya tanpa banyak pertanyaan.
+    </p>
+
+    <h3>Yang boleh kamu lakukan</h3>
+    <ul>
+      {izin.map((i) => (
+        <li>{i}</li>
+      ))}
+    </ul>
+
+    <h3>Yang perlu kamu sertakan</h3>
+    <ul>
+      {syarat.map((s) => (
+        <li>{s}</li>
+      ))}
+    </ul>
+
+    <h3>Tanpa jaminan</h3>
+    <p>
+      Perangkat lunaknya diberikan apa adanya, tanpa jaminan dalam bentuk apa pun.
+      Penulisnya tidak bertanggung jawab atas kerusakan atau kehilangan data yang timbul
+      dari pemakaiannya. Bagian ini adalah bunyi lisensi MIT yang biasa, dan ada di
+      hampir semua perangkat lunak bebas.
+    </p>
+
+    <pre><code>MIT License
+
+Copyright (c) 2026 Samuel Indra Bastian
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</code></pre>
+
+    <p>
+      Teks lengkapnya juga ada di
+      <a href="https://github.com/samuelindra123/lofiloop/blob/main/LICENSE">repositori</a>.
+    </p>
+  </section>
+
+  <section class="bagian">
+    <h2>FFmpeg: lisensi terpisah</h2>
+    <p>
+      LofiLoop tidak memuat FFmpeg di dalam kodenya. Ia menjalankan program FFmpeg
+      sebagai aplikasi terpisah. Salinan FFmpeg yang disertakan pemasang berasal dari
+      build resmi <a href="https://www.gyan.dev/ffmpeg/builds/">gyan.dev</a>, dan
+      berkasnya diperiksa dengan SHA256 sebelum dipakai.
+    </p>
+    <p>
+      FFmpeg punya lisensinya sendiri, dan lisensi itu <strong>tidak tercakup</strong>
+      oleh MIT. Tergantung build-nya, lisensinya LGPL atau GPL. Kalau kamu ingin
+      mengganti FFmpeg dengan build lain, LofiLoop akan memakainya asalkan berkasnya
+      bisa ditemukan.
+    </p>
+
+    <div class="tabel-bungkus">
+      <table>
+        <thead>
+          <tr>
+            <th>Bagian</th>
+            <th>Lisensinya</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Kode LofiLoop</td>
+            <td>MIT</td>
+          </tr>
+          <tr>
+            <td>FFmpeg (program terpisah)</td>
+            <td>LGPL atau GPL, tergantung build</td>
+          </tr>
+          <tr>
+            <td>Tauri, Svelte, dan pustaka lain</td>
+            <td>Lisensi masing-masing, umumnya MIT atau Apache 2.0</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="bagian">
+    <h2>Hasil videomu milikmu</h2>
+    <p>
+      Lisensi di atas mengatur perangkat lunaknya, bukan hasil pemrosesannya. Video yang
+      kamu buat dengan LofiLoop adalah milikmu, dan lisensi LofiLoop tidak memberi batasan
+      apa pun atasnya.
+    </p>
+    <p>
+      Satu hal yang perlu kamu perhatikan sendiri: kalau klip atau lagu yang kamu pakai
+      bukan buatanmu, hak atas materi itu tetap milik pemiliknya. Itu berlaku terlepas
+      dari perangkat lunak apa yang kamu pakai untuk mengolahnya.
+    </p>
+  </section>
+</Dokumen>

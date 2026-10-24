@@ -1,0 +1,178 @@
+---
+import Dokumen from "../layouts/Dokumen.astro";
+
+/**
+ * Rujukan baris perintah.
+ *
+ * Seluruh opsi di halaman ini diambil dari teks bantuan yang dicetak
+ * crates/cli/src/main.rs, bukan ditulis ulang dari ingatan. Kalau sebuah opsi
+ * ditambahkan ke programnya, halaman ini yang harus diperbarui agar tetap cocok.
+ */
+
+const opsiMasukan = [
+  {
+    nama: "--video <berkas>",
+    arti: "Video sumber yang akan diulang.",
+    bawaan: "wajib untuk mode loop",
+  },
+  {
+    nama: "--audio <berkas>",
+    arti: "Audio pengganti. Kalau dikosongkan, suara video dipertahankan.",
+    bawaan: "suara video",
+  },
+  {
+    nama: "--output, -o <berkas>",
+    arti: "Tempat menyimpan hasil.",
+    bawaan: "wajib",
+  },
+];
+
+const opsiAudio = [
+  {
+    nama: "--policy <mode>",
+    arti: "replace memakai audio pengganti, duck mencampur keduanya, keep mempertahankan suara video.",
+    bawaan: "replace",
+  },
+  { nama: "--lufs <angka>", arti: "Normalisasi kenyaringan audio. 0 berarti jangan disentuh.", bawaan: "-14" },
+  { nama: "--audio-fade <dtk>", arti: "Fade-out lembut di akhir audio.", bawaan: "3" },
+  { nama: "--audio-xfade <dtk>", arti: "Crossfade di sambungan antar putaran lagu.", bawaan: "2" },
+];
+
+const opsiDurasi = [
+  { nama: "--duration <durasi>", arti: "Durasi hasil: 30m, 1h, 3h, 45s, atau detik polos.", bawaan: "1h" },
+  { nama: "--loop <dtk>", arti: "Panjang satu putaran video. Sebesar durasi klip kalau ingin memakai seluruhnya.", bawaan: "10" },
+  { nama: "--video-xfade <dtk>", arti: "Crossfade video di sambungan. 0 berarti potong langsung.", bawaan: "1" },
+];
+
+const opsiKualitas = [
+  {
+    nama: "--encoder <mode>",
+    arti: "quality memakai libx264 dengan sambungan paling halus. hardware memakai h264_qsv, lebih cepat tetapi sambungannya lebih kasar.",
+    bawaan: "quality",
+  },
+  { nama: "--bitrate <nilai>", arti: "Bitrate video.", bawaan: "4M" },
+  {
+    nama: "--height <piksel>",
+    arti: "Tinggi hasil, misalnya 720 atau 1080. Lebar mengikuti rasio aspek sumber. Kosong berarti ikut sumber.",
+    bawaan: "ikut sumber",
+  },
+  { nama: "--fps <angka>", arti: "Frame per detik hasil, misalnya 24 atau 30. Kosong berarti ikut sumber.", bawaan: "ikut sumber" },
+  { nama: "--audio-bitrate <nilai>", arti: "Bitrate audio hasil.", bawaan: "192k" },
+];
+
+const opsiGabung = [
+  { nama: "--merge <berkas...>", arti: "Daftar lagu yang digabung, sesuai urutan penulisannya.", bawaan: "wajib untuk mode gabung" },
+  { nama: "--merge-xfade <dtk>", arti: "Transisi mulus antar lagu. 0 berarti potong langsung.", bawaan: "3" },
+  { nama: "--bitrate-audio <nilai>", arti: "Bitrate audio hasil penggabungan.", bawaan: "192k" },
+];
+
+const opsiLain = [
+  {
+    nama: "--work <folder>",
+    arti: "Folder untuk berkas antara. Dihapus sendiri setelah pekerjaan selesai.",
+    bawaan: "<keluaran>.work",
+  },
+  { nama: "--check-deps", arti: "Periksa FFmpeg dan encoder yang tersedia, lalu keluar.", bawaan: "" },
+];
+
+const kelompok = [
+  { judul: "Masukan dan keluaran", isi: opsiMasukan },
+  { judul: "Audio", isi: opsiAudio },
+  { judul: "Durasi dan pengulangan", isi: opsiDurasi },
+  { judul: "Kualitas dan bentuk keluaran", isi: opsiKualitas },
+  { judul: "Menggabungkan lagu", isi: opsiGabung },
+  { judul: "Lain-lain", isi: opsiLain },
+];
+---
+
+<Dokumen
+  judul="Baris perintah"
+  keterangan="Seluruh opsi lofiloop-cli untuk mengubah klip menjadi video panjang dan menggabungkan banyak lagu."
+  aktif="/cli"
+>
+  <div class="judul-halaman">
+    <h1>Baris perintah</h1>
+    <p class="pembuka">
+      Program <code>lofiloop-cli</code> memakai mesin yang sama dengan aplikasi desktop,
+      dengan seluruh pengaturan yang bisa diatur lewat tulisan. Cocok untuk memproses
+      banyak berkas sekaligus atau memasukkannya ke dalam skrip.
+    </p>
+  </div>
+
+  <section class="bagian">
+    <h2>Contoh yang paling sering dipakai</h2>
+
+    <h3>Loop satu jam dari klip dan lagu</h3>
+    <pre><code>lofiloop-cli --video klip.mp4 --audio lagu.mp3 --duration 1h -o hasil.mp4</code></pre>
+
+    <h3>Menghemat ruang, hasil 720p</h3>
+    <pre><code>lofiloop-cli --video klip.mp4 --audio lagu.mp3 \
+  --duration 3h --height 720 --bitrate 3M -o hasil_3jam.mp4</code></pre>
+
+    <h3>Memakai seluruh isi klip untuk setiap putaran</h3>
+    <pre><code>lofiloop-cli --video klip.mp4 --audio lagu.mp3 --loop 10 -o hasil.mp4</code></pre>
+    <p>
+      Nilai <code>--loop</code> sebaiknya sama dengan durasi klipnya. Panjang putaran tidak
+      bisa melebihi durasi klip, dan klip 10 detik pada 24 fps berisi 10 detik penuh.
+    </p>
+
+    <h3>Menggabungkan banyak lagu</h3>
+    <pre><code>lofiloop-cli --merge lagu1.mp3 lagu2.mp3 lagu3.mp3 -o gabungan.m4a</code></pre>
+
+    <h3>Memeriksa kesiapan mesin</h3>
+    <pre><code>lofiloop-cli --check-deps</code></pre>
+  </section>
+
+  {kelompok.map((k) => (
+    <section class="bagian bagian-lebar">
+      <h2>{k.judul}</h2>
+      <div class="tabel-bungkus">
+        <table>
+          <thead>
+            <tr>
+              <th>Opsi</th>
+              <th>Arti</th>
+              <th>Bawaan</th>
+            </tr>
+          </thead>
+          <tbody>
+            {k.isi.map((o) => (
+              <tr>
+                <td><code>{o.nama}</code></td>
+                <td>{o.arti}</td>
+                <td class="angka">{o.bawaan}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  ))}
+
+  <section class="bagian">
+    <h2>Catatan pemakaian</h2>
+
+    <h3>Panjang putaran tidak bisa melebihi klip</h3>
+    <p>
+      Satu putaran disusun dari ujung dan pangkal klip yang saling melebur, dan bahan
+      untuk melebur itu diambil dari dalam klip yang sama. Kalau <code>--loop</code>
+      melebihi durasi klip, programnya berhenti dengan pesan yang menyebut durasi klip
+      dan berapa panjang putaran yang masih muat.
+    </p>
+
+    <h3>Encoder perangkat keras lebih cepat, tetapi sambungannya lebih kasar</h3>
+    <p>
+      Mode <code>hardware</code> memakai h264_qsv yang memanfaatkan unit grafis, dan itu
+      jauh lebih cepat pada mesin yang mendukungnya. Konsekuensinya, sambungan loop-nya
+      terukur lebih kasar daripada libx264. Kalau hasilnya untuk tontonan, pakai
+      <code>quality</code>.
+    </p>
+
+    <h3>Pembatalan tidak langsung menghentikan semuanya</h3>
+    <p>
+      Saat kamu membatalkan, langkah FFmpeg yang sedang berjalan diselesaikan lebih dulu,
+      baru prosesnya berhenti. Ini disengaja: menghentikan FFmpeg di tengah penulisan
+      berkas bisa meninggalkan berkas hasil yang rusak.
+    </p>
+  </section>
+</Dokumen>

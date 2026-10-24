@@ -1,0 +1,333 @@
+---
+import Mandiri from "../../layouts/Mandiri.astro";
+import versi from "../../data/versi.json";
+
+/**
+ * Panduan pemakaian.
+ *
+ * Halaman ini paling banyak langkahnya, jadi susunannya dibuat supaya bisa
+ * dipindai cepat: setiap alur punya bagian sendiri, langkahnya bernomor besar, dan
+ * yang penting ditaruh di kotak kuncian.
+ *
+ * Jumlah langkahnya mengikuti apa yang benar-benar harus dikerjakan, bukan dipaksa
+ * tiga atau lima. Alur video empat langkah, alur gabung lagu tiga langkah.
+ */
+const terbaru = versi.versi[0];
+const pemasang = terbaru.berkas.find((b: { nama: string }) => b.nama.includes("Setup"));
+const portabel = terbaru.berkas.find((b: { nama: string }) => b.nama.includes("portable"));
+
+function ukuranMB(bytes: number) {
+  if (!bytes) return null;
+  return `${(bytes / 1_000_000).toFixed(1)} MB`;
+}
+
+const langkahVideo = [
+  {
+    judul: "Pilih berkas video",
+    isi: "Klik kotak video, atau seret berkasnya ke jendela aplikasi. Setelah dipilih, LofiLoop menampilkan durasi, resolusi, dan frame per detiknya. Kalau videomu punya audio, LofiLoop juga memberi tahu apakah audionya benar-benar terdengar atau hanya derau dasar.",
+  },
+  {
+    judul: "Pilih berkas audio, kalau ada",
+    isi: "Langkah ini opsional. Kalau kamu melewatinya, suara video dipertahankan. Kalau kamu memilih audio, LofiLoop menuliskan rencananya: berapa kali lagumu diulang, dan di detik berapa fade-out-nya jatuh.",
+  },
+  {
+    judul: "Atur durasi dan bentuk keluaran",
+    isi: "Tentukan durasi hasil, lalu atur panjang loop, crossfade, dan resolusi. Di bagian panjang loop ada keterangan batasnya, dan batas itu mengikuti durasi klip yang kamu pilih. Bagian hasil menampilkan perkiraan sebelum kamu menekan tombol: berapa lama render akan berjalan, dan berapa besar berkasnya nanti.",
+  },
+  {
+    judul: "Jalankan render",
+    isi: "Tekan Mulai render, lalu pilih tempat menyimpan hasilnya. Selama bekerja, LofiLoop menampilkan tahap yang sedang berjalan, penghitung waktu sejak render dimulai, dan kemajuan sebenarnya yang dilaporkan FFmpeg sendiri. Tombol Batalkan tersedia kalau kamu perlu menghentikannya.",
+  },
+];
+
+const langkahGabung = [
+  {
+    judul: "Tambahkan lagu",
+    isi: "Buka halaman Gabung lagu, lalu pilih beberapa berkas sekaligus. Format yang didukung antara lain MP3, WAV, M4A, FLAC, dan OGG.",
+  },
+  {
+    judul: "Atur urutannya",
+    isi: "Seret lagu ke posisi yang kamu mau, atau pakai tombol naik dan turun. Urutan di daftar adalah urutan di hasil akhir.",
+  },
+  {
+    judul: "Atur transisi, lalu gabungkan",
+    isi: "Panjang transisi antar lagu bisa diatur. Volume antar lagu disamakan otomatis ke -14 LUFS, supaya lagu yang direkam lebih pelan tidak tenggelam. Pilih folder tujuan, dan LofiLoop mengerjakan sisanya.",
+  },
+];
+
+const resepUkuran = [
+  { mau: "Hemat ruang sebisa mungkin", atur: "720p, 24 fps, bitrate 3M" },
+  { mau: "Seimbang", atur: "Ikut sumber, ikut sumber, bitrate 4M" },
+  { mau: "Kualitas tinggi", atur: "1080p, 30 fps, bitrate 8M atau lebih" },
+  { mau: "Sesuai unggahan platform", atur: "1080p, 30 fps, bitrate 8M" },
+];
+
+export const prerender = true;
+---
+
+<Mandiri
+  judul="Panduan pemakaian"
+  keterangan="Cara memasang LofiLoop, memilih berkas, mengatur bentuk keluaran, dan menjalankan render pertama."
+>
+  <section class="mandiri-pembuka">
+    <div class="mandiri-pembuka-dalam">
+      <p class="label-atas">Panduan</p>
+      <h1>Dari memasang sampai hasil pertama</h1>
+      <p class="pembuka-teks">
+        Dua alur, tujuh langkah seluruhnya. Pengaturan bawaannya sudah masuk akal, jadi
+        kamu hanya perlu mengubahnya kalau memang ada yang ingin berbeda.
+      </p>
+    </div>
+  </section>
+
+  <!-- Memasang dulu, karena ini yang dikerjakan sebelum apa pun. Dua pilihan
+       disandingkan supaya perbedaannya terlihat langsung. -->
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+      <h2>Memasang</h2>
+      <p>Dua cara, pilih salah satu. Isinya aplikasi yang sama.</p>
+
+      <div class="banding">
+        <div class="jawaban">
+          <h3>Pemasang</h3>
+          <p>
+            Unduh berkas pemasang{pemasang ? ` (${ukuranMB(pemasang.ukuran)})` : ""} dari
+            halaman rilis, lalu jalankan. Pemasangnya membuat pintasan di menu Mulai.
+            FFmpeg ikut dipasang di folder aplikasi, jadi tidak ada yang perlu diunduh
+            terpisah.
+          </p>
+          <div class="nama-berkas">LofiLoop-Setup-{terbaru.versi}.exe</div>
+        </div>
+        <div>
+          <h3>Versi portabel</h3>
+          <p>
+            Ekstrak ke folder mana pun dan jalankan. Cocok untuk USB atau komputer yang
+            tidak mengizinkan pemasangan.
+            {portabel ? ` Ukurannya ${ukuranMB(portabel.ukuran)}.` : ""}
+          </p>
+          <div class="nama-berkas">LofiLoop-{terbaru.versi}-portable.zip</div>
+        </div>
+      </div>
+
+      <div class="kunci">
+        Windows bisa menampilkan peringatan SmartScreen saat pertama dijalankan, karena
+        berkasnya belum ditandatangani secara digital. Pilih <em>More info</em>, lalu
+        <em>Run anyway</em>. Seluruh kode sumbernya terbuka kalau kamu ingin memeriksa
+        sendiri sebelum menjalankan.
+      </div>
+    </div>
+  </section>
+
+  <!-- Alur utama: membuat video loop. -->
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+      <p class="label-atas">Alur pertama</p>
+      <h2>Membuat video loop</h2>
+
+      <ol class="langkah-besar">
+        {langkahVideo.map((l, i) => (
+          <li>
+            <div class="langkah-nomor">{String(i + 1).padStart(2, "0")}</div>
+            <div class="langkah-isi">
+              <h3>{l.judul}</h3>
+              <p>{l.isi}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <!-- Alur kedua: menggabungkan lagu. -->
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+      <p class="label-atas">Alur kedua</p>
+      <h2>Menggabungkan lagu jadi satu berkas</h2>
+
+      <ol class="langkah-besar">
+        {langkahGabung.map((l, i) => (
+          <li>
+            <div class="langkah-nomor">{String(i + 1).padStart(2, "0")}</div>
+            <div class="langkah-isi">
+              <h3>{l.judul}</h3>
+              <p>{l.isi}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <!-- Memilih bentuk keluaran: tabel resep, karena inilah bentuk yang paling
+       langsung dipakai orang, bukan penjelasan tiap pengaturan. -->
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+      <h2>Memilih bentuk keluaran</h2>
+      <p>
+        Tiga pengaturan memengaruhi ukuran berkas, dan ketiganya bisa diatur bebas.
+        Urutan pengaruhnya dari yang paling besar: resolusi, lalu bitrate, lalu frame per
+        detik.
+      </p>
+
+      <div class="tabel-bungkus">
+        <table>
+          <thead>
+            <tr>
+              <th>Kalau kamu mau</th>
+              <th>Atur seperti ini</th>
+            </tr>
+          </thead>
+          <tbody>
+            {resepUkuran.map((r) => (
+              <tr>
+                <td>{r.mau}</td>
+                <td><code>{r.atur}</code></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="kunci">
+        Resolusi dan frame per detik tidak bisa menambah detail yang tidak ada di klip
+        sumbermu. Klip 720p yang dikeluarkan pada 1080p tetap terlihat seperti 720p,
+        hanya berkasnya lebih besar. Kalau klipmu 720p, biarkan resolusinya di
+        <em>Ikut sumber</em>.
+      </div>
+
+      <a class="mandiri-lanjut" href="/cara-kerja">
+        Kenapa menaikkan frame per detik tidak membantu
+        <span class="arah" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Alur ketiga: baris perintah, untuk yang memproses banyak berkas. -->
+  <section class="mandiri-bagian">
+    <div class="mandiri-dalam">
+      <p class="label-atas">Alur ketiga</p>
+      <h2>Kalau kamu lebih suka terminal</h2>
+      <p>
+        LofiLoop yang sama tersedia sebagai program baris perintah, dengan seluruh
+        pengaturan yang sama. Cocok untuk memproses banyak berkas sekaligus atau
+        memasukkannya ke dalam skrip.
+      </p>
+
+      <pre><code>lofiloop-cli --video klip.mp4 --audio lagu.mp3 \
+  --duration 1h --loop 10 --height 720 -o hasil.mp4</code></pre>
+
+      <a class="mandiri-lanjut" href="/cli">
+        Seluruh opsi baris perintah
+        <span class="arah" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Rujukan singkat ke halaman yang menangani masalah. -->
+  <section class="mandiri-bagian bagian-bantuan">
+    <div class="mandiri-dalam">
+      <h2>Kalau ada yang tidak berjalan</h2>
+      <p>
+        Pesan galat yang paling sering muncul beserta artinya sudah dikumpulkan, bersama
+        hal-hal yang sering dikira rusak padahal bukan.
+      </p>
+      <a class="mandiri-lanjut" href="/pemecahan-masalah">
+        Buka halaman pemecahan masalah
+        <span class="arah" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+</Mandiri>
+
+<style>
+  .label-atas {
+    font-family: var(--font-angka);
+    font-size: 12.5px;
+    color: var(--kuningan);
+    margin: 0 0 var(--j3);
+  }
+
+  /* Nama berkas ditampilkan sebagai kode, karena itu memang nama berkas yang harus
+     dicocokkan saat mengunduh. */
+  .nama-berkas {
+    margin-top: var(--j3);
+    font-family: var(--font-angka);
+    font-size: 12.5px;
+    color: var(--tulang-samar);
+    word-break: break-all;
+  }
+
+  .kunci {
+    border-left: 2px solid var(--kuningan);
+    padding: var(--j1) 0 var(--j1) var(--j5);
+    margin-top: var(--j5);
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--tulang-redup);
+    max-width: 62ch;
+  }
+
+  /* ---------- Langkah bernomor besar ----------
+     Nomornya ditaruh di kiri dalam kolom sendiri, sehingga judul dan isi langkah
+     tetap sejajar dan mudah dipindai. */
+
+  .langkah-besar {
+    list-style: none;
+    padding: 0 !important;
+    margin: 0;
+    max-width: none;
+  }
+
+  .langkah-besar > li {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: var(--j5);
+    padding: var(--j5) 0;
+    border-top: 1px solid var(--garis);
+  }
+
+  .langkah-besar > li:last-child {
+    border-bottom: 1px solid var(--garis);
+  }
+
+  .langkah-nomor {
+    font-family: var(--font-angka);
+    font-variant-numeric: tabular-nums;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--kuningan);
+  }
+
+  .langkah-isi h3 {
+    margin: 0 0 var(--j2);
+    font-size: 1.05rem;
+    font-family: var(--font-isi);
+    font-weight: 600;
+  }
+
+  .langkah-isi p {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.68;
+    color: var(--tulang-redup);
+    max-width: 62ch;
+  }
+
+  /* Bagian bantuan diberi latar berbeda, sebagai penanda bahwa ia bukan langkah
+     alur melainkan tempat mencari pertolongan. */
+  .bagian-bantuan {
+    background: var(--arang-2);
+  }
+
+  @media (max-width: 640px) {
+    .langkah-besar > li {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--j2);
+    }
+
+    .langkah-nomor {
+      font-size: 15px;
+    }
+  }
+</style>

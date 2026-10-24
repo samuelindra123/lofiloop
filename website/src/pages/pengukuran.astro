@@ -1,0 +1,294 @@
+---
+import Dokumen from "../layouts/Dokumen.astro";
+
+/**
+ * Angka pengukuran.
+ *
+ * Seluruh angka di halaman ini berasal dari docs/benchmark.md, yang diukur pada
+ * satu mesin nyata. Halaman ini sengaja tidak menampilkan satu angka pun yang
+ * tidak bisa ditelusuri ke sumber itu.
+ *
+ * Mesinnya disebut lengkap, karena angka tanpa mesin tidak berarti apa-apa.
+ */
+
+const mesin = {
+  cpu: "Intel Pentium Silver N5000, 4 core, 1,1 GHz",
+  ram: "3,8 GB",
+  gpu: "Intel UHD Graphics 605",
+  os: "Windows 11 Pro, disk C eMMC",
+};
+
+// Video 1 jam, 1080p25, libx264 veryfast 4 Mbps.
+const videoSatuJam = [
+  { label: "Waktu dinding", nilai: "103,6 dtk", arti: "Dari perintah dijalankan sampai berkas selesai" },
+  { label: "Waktu CPU", nilai: "10,9 dtk", arti: "Sisanya menunggu tulis disk" },
+  { label: "RAM puncak", nilai: "28,7 MB", arti: "Tidak tumbuh seiring durasi hasil" },
+  { label: "Ukuran berkas", nilai: "1.787 MB", arti: "Video saja, belum digabung audio" },
+  { label: "Jumlah frame", nilai: "90.002", arti: "Durasi 3600,08 dtk" },
+  { label: "Batas unit tanpa keyframe", nilai: "0", arti: "Setiap awal putaran bisa dipotong dengan aman" },
+];
+
+// Hasil akhir 1 jam setelah video dan audio digabung.
+const hasilAkhir = [
+  { label: "Waktu penggabungan", nilai: "118,7 dtk", arti: "Menyatukan video dan audio tanpa encode ulang" },
+  { label: "RAM puncak", nilai: "53,9 MB", arti: "Puncak tertinggi sepanjang seluruh alur" },
+  { label: "Ukuran akhir", nilai: "1,96 GB", arti: "Video 1080p 1 jam dengan audio" },
+  { label: "Frame video", nilai: "90.002", arti: "Durasi 3600,08 dtk" },
+  { label: "Paket audio", nilai: "155.040", arti: "Durasi 3600,0218 dtk" },
+  { label: "Selisih audio dan video", nilai: "0,058 dtk", arti: "Sekitar 1,5 frame, tidak terasa" },
+  { label: "Dekode ulang penuh", nilai: "0 error", arti: "Seluruh berkas dibaca ulang sebagai pemeriksaan akhir" },
+];
+
+// Pembanding jalur audio: encode streaming melawan pengulangan paket.
+const audio = [
+  { label: "Loop PCM lalu encode streaming", nilai: "427,4 dtk", arti: "Audio 1 jam" },
+  { label: "Encode sekali, lalu ulang paket AAC", nilai: "4 dtk", arti: "Hasil yang sama, 100 kali lebih cepat" },
+  { label: "Encode AAC, 120 dtk audio", nilai: "10,9 dtk", arti: "Sekitar 11 kali durasi aslinya" },
+];
+
+// Metrik sambungan. Rasio di bawah 1,5 dianggap lulus.
+const sambunganVideo = [
+  { label: "Crossfade berakhir di frame pertama", nilai: "1,10", lulus: true },
+  { label: "libx264 dengan crossfade 2 detik", nilai: "1,05", lulus: true },
+  { label: "libx264 dengan crossfade 1 detik", nilai: "1,38", lulus: true },
+  { label: "Crossfade berakhir 1 frame terlalu awal", nilai: "1,65", lulus: false },
+  { label: "h264_qsv, encoder perangkat keras", nilai: "1,73", lulus: false },
+  { label: "Loop mentah tanpa crossfade", nilai: "10,82", lulus: false },
+];
+
+const sambunganAudio = [
+  { label: "Paket AAC, 0 sampai 140 detik", nilai: "0,79", lulus: true },
+  { label: "Paket AAC, 3500 sampai 3600 detik", nilai: "0,51", lulus: true },
+  { label: "PCM streaming, 0 sampai 140 detik", nilai: "0,82", lulus: true },
+  { label: "Loop mentah tanpa crossfade", nilai: "10,46", lulus: false },
+];
+
+// Perbandingan memori saat menganggur.
+const memori = [
+  { label: "Tauri, 7 proses", nilai: "318 MB" },
+  { label: "Slint, 1 proses", nilai: "67 MB" },
+];
+---
+
+<Dokumen
+  judul="Angka pengukuran"
+  keterangan="Hasil pengukuran LofiLoop pada mesin kelas bawah: waktu render, pemakaian memori, dan metrik sambungan."
+  aktif="/pengukuran"
+>
+  <div class="judul-halaman">
+    <h1>Angka pengukuran</h1>
+    <p class="pembuka-teks">
+      Semua angka di halaman ini diukur, bukan diperkirakan. Mesinnya sengaja dipilih
+      yang paling lemah, karena kalau di situ bisa, di mesin yang lebih baik pasti bisa.
+    </p>
+    </div>
+
+  <section class="bagian">
+    <h2>Mesin pengujian</h2>
+    <dl class="daftar-angka">
+      <div>
+        <dt>Prosesor</dt>
+        <dd>{mesin.cpu}</dd>
+      </div>
+      <div>
+        <dt>Memori</dt>
+        <dd>{mesin.ram}</dd>
+      </div>
+      <div>
+        <dt>Grafis</dt>
+        <dd>{mesin.gpu}</dd>
+      </div>
+      <div>
+        <dt>Sistem</dt>
+        <dd>{mesin.os}</dd>
+      </div>
+    </dl>
+    <p class="catatan-kecil">
+      Angka dari mesin ini tidak bisa langsung dibandingkan dengan mesin lain. Yang
+      penting di sini adalah besarnya, bukan angkanya secara persis: alat ini tidak butuh
+      komputer bertenaga besar.
+    </p>
+  </section>
+
+  <section class="bagian">
+    <h2>Video 1 jam, 1080p</h2>
+    <dl class="daftar-angka">
+      {videoSatuJam.map((m) => (
+        <div>
+          <dt>{m.label}<span class="arti">{m.arti}</span></dt>
+          <dd>{m.nilai}</dd>
+        </div>
+      ))}
+    </dl>
+    <p class="catatan-kecil">
+      Waktu CPU yang jauh lebih kecil daripada waktu dinding menunjukkan pekerjaannya
+      didominasi menulis berkas, bukan menghitung. Itu akibat langsung dari pengulangan
+      di tingkat paket.
+    </p>
+  </section>
+
+  <section class="bagian">
+    <h2>Hasil akhir setelah digabung dengan audio</h2>
+    <dl class="daftar-angka">
+      {hasilAkhir.map((m) => (
+        <div>
+          <dt>{m.label}<span class="arti">{m.arti}</span></dt>
+          <dd>{m.nilai}</dd>
+        </div>
+      ))}
+    </dl>
+  </section>
+
+  <section class="bagian">
+    <h2>Audio: dua jalur, selisih 100 kali</h2>
+    <p class="prosa">
+      Ini perbandingan yang menjelaskan sebagian besar kecepatan LofiLoop. Keduanya
+      menghasilkan audio yang sama.
+    </p>
+    <dl class="daftar-angka">
+      {audio.map((m) => (
+        <div>
+          <dt>{m.label}<span class="arti">{m.arti}</span></dt>
+          <dd>{m.nilai}</dd>
+        </div>
+      ))}
+    </dl>
+  </section>
+
+  <section class="bagian">
+    <h2>Metrik sambungan video</h2>
+    <p class="prosa">
+      Angka ini mengukur seberapa kasar sambungan loop dibanding gerakan normal di
+      sekitarnya. Rasio 1,0 berarti sambungannya tidak berbeda dari frame biasa. Batas
+      kelulusan 1,5, dan apa pun di bawah itu tidak terlihat mata.
+    </p>
+
+    <div class="tabel-bungkus">
+      <table>
+        <thead>
+          <tr>
+            <th>Kasus</th>
+            <th class="angka">Rasio</th>
+            <th>Hasil</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sambunganVideo.map((m) => (
+            <tr>
+              <td>{m.label}</td>
+              <td class="angka">{m.nilai}</td>
+              <td class:list={["hasil", m.lulus ? "lulus" : "gagal"]}>
+                {m.lulus ? "Lulus" : "Gagal"}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <p class="catatan-kecil">
+      Dua baris terakhir sengaja ditampilkan meski gagal. Keduanya adalah pembanding yang
+      membuktikan metrik ini benar-benar bisa mendeteksi sambungan yang buruk, bukan
+      sekadar selalu menyatakan lulus.
+    </p>
+  </section>
+
+  <section class="bagian">
+    <h2>Metrik sambungan audio</h2>
+    <p class="prosa">
+      Diukur dari kontinuitas sampel tepat di batas sambungan, dibandingkan dengan
+      kontinuitas di tempat lain. Di bawah 1,0 berarti sambungan audio tidak menimbulkan
+      bunyi klik.
+    </p>
+
+    <div class="tabel-bungkus">
+      <table>
+        <thead>
+          <tr>
+            <th>Kasus</th>
+            <th class="angka">Kontinuitas</th>
+            <th>Hasil</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sambunganAudio.map((m) => (
+            <tr>
+              <td>{m.label}</td>
+              <td class="angka">{m.nilai}</td>
+              <td class:list={["hasil", m.lulus ? "lulus" : "gagal"]}>
+                {m.lulus ? "Lulus" : "Gagal"}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      </div>
+  </section>
+
+  <section class="bagian">
+    <h2>Pemakaian memori saat menganggur</h2>
+    <p class="prosa">
+      Diukur 15 detik setelah aplikasi dibuka, tanpa memuat berkas apa pun. Dibandingkan
+      dengan kerangka antarmuka alternatif yang diuji pada tahap awal pengembangan.
+    </p>
+    <dl class="daftar-angka">
+      {memori.map((m) => (
+        <div>
+          <dt>{m.label}</dt>
+          <dd>{m.nilai}</dd>
+        </div>
+      ))}
+    </dl>
+    <p class="catatan-kecil">
+      Angka ini membuat Tauri terlihat lebih berat, dan itu benar. Kerangka yang lebih
+      ringan sempat dipertimbangkan, tetapi Tauri dipilih karena ekosistem antarmuka web
+      memungkinkan tampilan yang jauh lebih rapi untuk aplikasi seperti ini. Keputusan itu
+      diambil dengan angka ini sudah diketahui, bukan tanpa mengetahuinya.
+    </p>
+  </section>
+
+  <section class="bagian">
+    <h2>Yang belum dibuktikan</h2>
+    <p>
+      Metrik di atas membuktikan tidak ada lompatan di sambungan video dan tidak ada klik
+      di sambungan audio. Yang tidak bisa dibuktikan angka adalah penilaian mata dan
+      telinga manusia. Kalau kamu menemukan sambungan yang terasa kasar pada materimu
+      sendiri, itu masukan yang berguna dan angka di halaman ini tidak menyanggahnya.
+    </p>
+
+    <a class="lanjut" href="https://github.com/samuelindra123/lofiloop/blob/main/docs/benchmark.md">
+      Laporan pengukuran lengkap di repositori
+      <span class="arah" aria-hidden="true">→</span>
+    </a>
+  </section>
+</Dokumen>
+
+<style>
+  /* Keterangan kecil di bawah daftar angka. Bentuknya sengaja lebih redup daripada
+     isi, karena tugasnya menjelaskan, bukan bersaing dengan angka. */
+  .catatan-kecil {
+    font-size: 13.5px;
+    color: var(--tulang-samar);
+    margin-top: var(--j4);
+    max-width: var(--lebar-isi);
+  }
+
+  /* Penjelasan singkat yang menempel pada label, supaya pembaca tidak perlu
+     menebak apa arti sebuah angka. */
+  .daftar-angka .arti {
+    display: block;
+    font-size: 12.5px;
+    color: var(--tulang-samar);
+    margin-top: 1px;
+  }
+
+  /* Keadaan lulus dan gagal dibedakan warna dan teksnya sekaligus, bukan warna
+     saja, supaya tetap terbaca oleh orang yang tidak membedakan warna. */
+  .hasil.lulus {
+    color: var(--kuningan);
+  }
+
+  .hasil.gagal {
+    color: var(--tanah);
+  }
+</style>

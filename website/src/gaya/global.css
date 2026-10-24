@@ -1,0 +1,503 @@
+@import "tailwindcss";
+
+/* ============================================================================
+   Fondasi gaya LofiLoop.
+   Setiap nilai di berkas ini berasal dari DESIGN.md, dan setiap pilihan punya
+   alasan yang tertulis di sana. Jangan menambah warna atau radius baru tanpa
+   memperbarui DESIGN.md lebih dulu, karena itulah yang menjaga situs ini tidak
+   melenceng menjadi kumpulan gaya yang tidak berhubungan.
+   ========================================================================= */
+
+/* ---------- Huruf ---------- */
+
+/* Fraunces: judul saja. Karakternya kuat pada ukuran besar dan terasa hangat,
+   sesuai nada lofi, tetapi melelahkan dibaca pada ukuran kecil. */
+@font-face {
+  font-family: "Fraunces";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/huruf/fraunces-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215;
+}
+
+/* Inter: teks isi. Tugasnya menghilang dari perhatian, dan huruf ini melakukannya. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/huruf/inter-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215;
+}
+
+/* JetBrains Mono: angka dan kode. Angka di situs ini dibandingkan (durasi 1 jam
+   dengan 3 jam, ukuran 58,9 MB dengan 81,6 MB), dan huruf monospace menjaga
+   digitnya sejajar dalam kolom sehingga bisa dibandingkan sekilas. */
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/huruf/jetbrains-mono-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215;
+}
+
+/* ---------- Token ---------- */
+
+:root {
+  /* Radius. Empat nilai, masing-masing punya arti. Tombol siku menandakan alat;
+     tombol berbentuk pil menandakan aplikasi konsumen. */
+  --r-tanda: 2px;
+  --r-kendali: 6px;
+  --r-panel: 10px;
+  --r-bulat: 999px;
+
+  /* Lebar isi. Teks dibatasi agar barisnya tidak terlalu panjang untuk dibaca. */
+  --lebar-isi: 68ch;
+  --lebar-situs: 1180px;
+
+  /* Jarak. Dipakai berjenjang, bukan satu nilai untuk semuanya. */
+  --j1: 4px;
+  --j2: 8px;
+  --j3: 12px;
+  --j4: 16px;
+  --j5: 24px;
+  --j6: 32px;
+  --j7: 48px;
+  --j8: 72px;
+  --j9: 104px;
+
+  /* Gerak. MOTION 1: hanya hover dan transisi halus. */
+  --dur: 120ms;
+  --ease: cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+/* Tema gelap adalah bawaan. Produk ini alat studio yang dipakai pada malam hari
+   dengan berkas besar, dan latar gelap hangat mengurangi kelelahan mata. */
+:root,
+[data-tema="gelap"] {
+  --arang: #17140f;
+  --arang-2: #1f1b15;
+  --arang-3: #2a241c;
+  --garis: #332c23;
+  --garis-tegas: #443a2e;
+  --tulang: #ede6da;
+  --tulang-redup: #a99e8c;
+  /* Dinaikkan dari #8f8574 agar lolos ambang 4,5:1 di ketiga permukaan, termasuk
+     permukaan terangkat yang dipakai kode sebaris. Nilai lama hanya 4,22:1 di sana. */
+  --tulang-samar: #9e9686;
+  --kuningan: #c9964a;
+  --kuningan-redup: #6b5228;
+  /* Dinaikkan dari #c4744c agar lolos di permukaan terangkat juga. Nilai lama
+     hanya 4,35:1 di sana. */
+  --tanah: #cc7f55;
+  --kode-latar: #131009;
+  /* Teks di atas tombol utama. Kuningan tema gelap cukup terang, jadi teksnya gelap. */
+  --di-atas-aksen: #1a1408;
+
+  color-scheme: dark;
+}
+
+/* Tema terang bukan versi pucat dari tema gelap, melainkan arah yang sama pada
+   kertas hangat. Putih bersih sengaja dihindari. */
+[data-tema="terang"] {
+  --arang: #f7f2e9;
+  --arang-2: #fffcf6;
+  --arang-3: #ede5d7;
+  --garis: #dcd2c0;
+  --garis-tegas: #c4b8a2;
+  --tulang: #241f18;
+  --tulang-redup: #5a5145;
+  --tulang-samar: #6e6558;
+  /* Digelapkan dari #8a6420. Nilai lama hanya 4,28:1 di permukaan terangkat, dan
+     teks putih di atasnya hanya 3,42:1. Sekarang aksennya lolos di ketiga permukaan
+     sekaligus membuat teks putih di atasnya lolos dengan 6,98:1. */
+  --kuningan: #75531a;
+  --kuningan-redup: #ddc99b;
+  --tanah: #96432a;
+  --kode-latar: #f2ebdd;
+  /* Kuningan tema terang jauh lebih gelap, jadi teks di atasnya harus terang. */
+  --di-atas-aksen: #ffffff;
+
+  color-scheme: light;
+}
+
+/* Tailwind membaca token ini lewat @theme, sehingga kelas seperti `text-tulang`
+   dan `bg-arang-2` memakai nilai yang sama dengan yang dipakai CSS biasa. */
+@theme inline {
+  --color-arang: var(--arang);
+  --color-arang-2: var(--arang-2);
+  --color-arang-3: var(--arang-3);
+  --color-garis: var(--garis);
+  --color-garis-tegas: var(--garis-tegas);
+  --color-tulang: var(--tulang);
+  --color-tulang-redup: var(--tulang-redup);
+  --color-tulang-samar: var(--tulang-samar);
+  --color-kuningan: var(--kuningan);
+  --color-tanah: var(--tanah);
+  --color-di-atas-aksen: var(--di-atas-aksen);
+
+  --font-judul: "Fraunces", Georgia, serif;
+  --font-isi: "Inter", system-ui, sans-serif;
+  --font-angka: "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* ---------- Dasar ---------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--arang);
+  /* Gulir halus hanya kalau pengguna tidak mematikannya. */
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--arang);
+  color: var(--tulang);
+  font-family: var(--font-isi);
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Fokus papan tik: satu-satunya pendaran di seluruh situs. Ia bukan hiasan,
+   melainkan penanda keadaan nyata bagi pengguna papan tik (R-32). */
+:focus-visible {
+  outline: 2px solid var(--kuningan);
+  outline-offset: 2px;
+  border-radius: var(--r-tanda);
+}
+
+/* Jangan hapus garis fokus tanpa menggantinya. Aturan di atas sudah menggantinya. */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ---------- Tipografi ---------- */
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-judul);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: clamp(2rem, 5vw, 3.25rem);
+}
+h2 {
+  font-size: clamp(1.5rem, 3.2vw, 2.1rem);
+}
+h3 {
+  font-size: clamp(1.15rem, 2vw, 1.4rem);
+}
+
+p {
+  margin: 0 0 var(--j4);
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--tulang);
+  text-decoration-color: var(--garis-tegas);
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--dur) var(--ease);
+}
+
+a:hover {
+  text-decoration-color: var(--kuningan);
+}
+
+/* Angka dan kode selalu memakai huruf monospace dengan digit selebar sama,
+   supaya kolom angka sejajar dan bisa dibandingkan mata. */
+code,
+kbd,
+samp,
+pre,
+.angka {
+  font-family: var(--font-angka);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "zero" 1;
+}
+
+/* Kode sebaris. Sengaja tanpa latar mencolok, karena kode di dokumentasi ini
+   sering muncul di tengah kalimat dan latar tebal akan memecah paragrafnya. */
+:not(pre) > code {
+  font-size: 0.9em;
+  color: var(--tulang);
+  background: var(--arang-3);
+  border: 1px solid var(--garis);
+  border-radius: var(--r-tanda);
+  padding: 1px 5px;
+}
+
+pre {
+  margin: 0 0 var(--j4);
+  padding: var(--j4) var(--j5);
+  background: var(--kode-latar);
+  border: 1px solid var(--garis);
+  border-radius: var(--r-kendali);
+  overflow-x: auto;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* ---------- Kendali ---------- */
+
+.tombol {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--j2);
+  /* Tinggi minimum 44px agar nyaman disentuh jempol, bukan hanya diklik tetikus. */
+  min-height: 44px;
+  padding: 0 var(--j5);
+  border: 1px solid var(--garis-tegas);
+  border-radius: var(--r-kendali);
+  background: var(--arang-2);
+  color: var(--tulang);
+  font-family: var(--font-isi);
+  font-size: 14.5px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+
+.tombol:hover {
+  background: var(--arang-3);
+  border-color: var(--kuningan-redup);
+}
+
+/* Tindakan utama. Hanya satu per layar, dan ini tempat aksen kuningan muncul.
+   Warna teksnya mengikuti token, karena kuningan di tema terang jauh lebih gelap
+   daripada di tema gelap, sehingga teks gelap tidak lagi terbaca di sana. */
+.tombol-utama {
+  background: var(--kuningan);
+  border-color: var(--kuningan);
+  color: var(--di-atas-aksen);
+  font-weight: 600;
+}
+
+.tombol-utama:hover {
+  background: var(--tulang);
+  border-color: var(--tulang);
+  color: var(--arang);
+}
+
+/* ---------- Tanda dan label ---------- */
+
+.tanda {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border: 1px solid var(--garis-tegas);
+  border-radius: var(--r-tanda);
+  font-family: var(--font-angka);
+  font-size: 11.5px;
+  letter-spacing: 0.01em;
+  color: var(--tulang-redup);
+}
+
+/* Titik penanda. Hanya dipakai untuk keadaan yang benar-benar ada, dan warnanya
+   mengikuti keadaan itu. Tidak ada denyut berulang. */
+.titik {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-bulat);
+  flex: none;
+}
+
+.titik-siap {
+  background: var(--kuningan);
+}
+.titik-gagal {
+  background: var(--tanah);
+}
+
+/* ---------- Panel ---------- */
+
+.panel {
+  background: var(--arang-2);
+  border: 1px solid var(--garis);
+  border-radius: var(--r-panel);
+  padding: var(--j5);
+}
+
+/* ---------- Daftar angka ----------
+   Angka pengukuran ditata sebagai daftar berlabel: keterangan di kiri, angka
+   rata kanan di kanan. Bentuk ini dipilih karena paling jujur untuk sekumpulan
+   angka sejenis, dan karena kolom yang sejajar membuat angkanya bisa
+   dibandingkan sekilas. */
+
+.daftar-angka {
+  margin: 0;
+  border-top: 1px solid var(--garis);
+}
+
+.daftar-angka > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--j4);
+  padding: var(--j3) 0;
+  border-bottom: 1px solid var(--garis);
+}
+
+.daftar-angka dt {
+  color: var(--tulang-redup);
+  font-size: 14px;
+}
+
+.daftar-angka dd {
+  margin: 0;
+  font-family: var(--font-angka);
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+  text-align: right;
+  color: var(--tulang);
+}
+
+/* ---------- Tabel ---------- */
+
+/* Tabel dibungkus wadah yang bisa digulir mendatar sendiri. Tanpa ini, tabel
+   lebar akan membuat seluruh halaman bisa digulir ke samping di layar kecil. */
+.tabel-bungkus {
+  overflow-x: auto;
+  margin: 0 0 var(--j5);
+  border: 1px solid var(--garis);
+  border-radius: var(--r-kendali);
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 14px;
+}
+
+th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--tulang);
+  padding: var(--j3) var(--j4);
+  border-bottom: 1px solid var(--garis-tegas);
+  white-space: nowrap;
+}
+
+td {
+  padding: var(--j3) var(--j4);
+  border-bottom: 1px solid var(--garis);
+  color: var(--tulang-redup);
+  vertical-align: top;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* Kolom yang berisi angka dibuat rata kanan dan memakai huruf monospace, supaya
+   digitnya sejajar dan bisa dibandingkan sekilas. */
+td.angka,
+th.angka {
+  text-align: right;
+  font-family: var(--font-angka);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+td code {
+  white-space: nowrap;
+}
+
+/* ---------- Keterangan ---------- */
+
+/* Keterangan yang menyebut sebab dan tindakan, bukan sekadar "tidak ada data".
+   Bentuknya dipakai untuk keadaan kosong, memuat, dan gagal. */
+.keterangan {
+  padding: var(--j4) var(--j5);
+  border: 1px solid var(--garis);
+  border-left: 2px solid var(--garis-tegas);
+  border-radius: 0 var(--r-kendali) var(--r-kendali) 0;
+  background: var(--arang-2);
+  color: var(--tulang-redup);
+  font-size: 14px;
+}
+
+.keterangan strong {
+  color: var(--tulang);
+  font-weight: 600;
+}
+
+/* Garis tepi kiri di sini menandai keadaan, bukan hiasan: warna tanah berarti
+   ada yang gagal atau perlu perhatian. */
+.keterangan-perhatian {
+  border-left-color: var(--tanah);
+}
+
+/* ---------- Pembungkus ---------- */
+
+.bungkus {
+  width: 100%;
+  max-width: var(--lebar-situs);
+  margin: 0 auto;
+  padding: 0 var(--j5);
+}
+
+.prosa {
+  max-width: var(--lebar-isi);
+}
+
+/* Lewati ke isi: terlihat hanya saat difokus, supaya pengguna papan tik tidak
+   perlu menelusuri seluruh navigasi setiap kali berpindah halaman. */
+.lewati {
+  position: absolute;
+  left: var(--j4);
+  top: -100px;
+  z-index: 100;
+  padding: var(--j3) var(--j5);
+  background: var(--kuningan);
+  color: var(--di-atas-aksen);
+  border-radius: var(--r-kendali);
+  font-weight: 600;
+  text-decoration: none;
+  transition: top var(--dur) var(--ease);
+}
+
+.lewati:focus {
+  top: var(--j4);
+}

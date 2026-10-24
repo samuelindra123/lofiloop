@@ -1,0 +1,236 @@
+---
+import Dokumen from "../layouts/Dokumen.astro";
+
+/**
+ * Pemecahan masalah.
+ *
+ * Isi halaman ini bukan daftar pertanyaan yang dikarang. Setiap butir di sini
+ * berasal dari perilaku yang benar-benar ada di dalam program, termasuk pesan
+ * galat yang persis seperti yang akan kamu lihat.
+ *
+ * Halaman ini ada karena beberapa di antaranya pernah benar-benar membingungkan:
+ * pesan yang menyebut jumlah frame, folder sementara yang tertinggal, dan jendela
+ * hitam yang muncul sekilas. Ketiganya sudah diperbaiki, tetapi penjelasannya tetap
+ * berguna untuk versi lama dan untuk memahami apa yang terjadi.
+ */
+---
+
+<Dokumen
+  judul="Pemecahan masalah"
+  keterangan="Pesan galat LofiLoop dan artinya, plus hal-hal yang sering dikira rusak padahal bukan."
+  aktif="/pemecahan-masalah"
+>
+  <div class="judul-halaman">
+    <h1>Pemecahan masalah</h1>
+    <p class="pembuka">
+      Pesan galat yang mungkin kamu temui, apa artinya, dan apa yang bisa dilakukan.
+      Kalau masalahmu tidak ada di sini, laporkan supaya bisa ditambahkan.
+    </p>
+  </div>
+
+  <section class="bagian">
+    <h2>"Klip ini ... jadi belum bisa membuat satu putaran ... detik"</h2>
+    <p>
+      Panjang satu putaran melebihi durasi klipmu. Satu putaran disusun dari ujung dan
+      pangkal klip yang saling melebur, dan bahan peleburannya diambil dari dalam klip
+      yang sama, jadi panjangnya tidak bisa melebihi durasi klip.
+    </p>
+
+    <h3>Yang bisa dilakukan</h3>
+    <ul>
+      <li>
+        <strong>Turunkan panjang loop</strong> ke angka yang disebut di pesannya. Untuk
+        klip 10 detik, pilih 10 detik atau kurang, dan itu berarti satu putaran memakai
+        seluruh isi klip.
+      </li>
+      <li>
+        <strong>Pakai klip yang lebih panjang</strong> kalau kamu memang perlu putaran
+        yang panjang, supaya perulangannya tidak terasa terlalu cepat.
+      </li>
+    </ul>
+
+    <h3>Yang perlu kamu tahu</h3>
+    <p>
+      Panjang loop <strong>tidak</strong> berubah saat kamu mengubah resolusi atau frame
+      per detik keluaran. Perubahan-perubahan itu diterapkan sebelum pemotongan berjalan,
+      jadi panjang yang tersedia tetap sepanjang klipnya. Kalau kamu pernah menemukan
+      pesan yang menyarankan angka berbeda saat memakai resolusi tertentu, itu kesalahan
+      pada versi lama yang sudah diperbaiki di 0.2.3.
+    </p>
+  </section>
+
+  <section class="bagian">
+    <h2>Muncul jendela hitam sekilas saat memproses</h2>
+    <p>
+      Itu jendela konsol. LofiLoop menjalankan program bantu di belakang layar, dan pada
+      versi sebelum 0.2.0, Windows membuat jendela baru untuk setiap program bantu yang
+      dijalankan tanpa konsol.
+    </p>
+    <p>
+      Sejak 0.2.0 jendela itu tidak lagi muncul. Kalau kamu masih melihatnya, versi yang
+      terpasang masih lama. Perbarui ke versi terbaru dari
+      <a href="/rilis">halaman rilis</a>.
+    </p>
+  </section>
+
+  <section class="bagian">
+    <h2>Ada folder bernama <code>hasil.work</code> di sebelah berkas hasil</h2>
+    <p>
+      Itu folder kerja LofiLoop, tempat ia menulis berkas sementara selama memproses.
+      Ukurannya bisa 1 sampai 2 GB per render, jadi ia menghapus dirinya sendiri begitu
+      pekerjaan selesai.
+    </p>
+
+    <div class="tabel-bungkus">
+      <table>
+        <thead>
+          <tr>
+            <th>Keadaan</th>
+            <th>Yang terjadi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Render berhasil</td>
+            <td>Folder dihapus otomatis</td>
+          </tr>
+          <tr>
+            <td>Render gagal, ada isinya</td>
+            <td>Folder <strong>disisakan</strong> supaya isinya bisa diperiksa</td>
+          </tr>
+          <tr>
+            <td>Render gagal sebelum menulis apa pun</td>
+            <td>Folder dihapus, karena folder kosong tidak memberi petunjuk apa pun</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Jadi kalau kamu melihat folder itu ada dan ada isinya, berarti render terakhir
+      gagal di tengah jalan. Selamat memeriksa, dan hapus manual kalau sudah tidak
+      diperlukan. Untuk menaruhnya di tempat lain sejak awal, pakai opsi
+      <code>--work</code> di baris perintah.
+    </p>
+  </section>
+
+  <section class="bagian">
+    <h2>Hasilnya membesar padahal kualitasnya tidak bertambah</h2>
+    <p>
+      Ini bukan kerusakan, melainkan akibat dari pengaturan yang memang tersedia.
+      Menaikkan resolusi atau frame per detik di atas nilai klip sumbermu tidak menambah
+      detail, karena detail itu tidak pernah ada di berkas asalnya. Yang bertambah hanya
+      jumlah data yang harus disimpan.
+    </p>
+
+    <div class="tabel-bungkus">
+      <table>
+        <thead>
+          <tr>
+            <th>Gejala</th>
+            <th>Penyebabnya</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Ukuran berkas jauh lebih besar, gambar sama tajamnya</td>
+            <td>Resolusi keluaran lebih tinggi daripada klip sumber</td>
+          </tr>
+          <tr>
+            <td>Ukuran bertambah, gerakan sama saja</td>
+            <td>Frame per detik keluaran lebih tinggi daripada klip sumber</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Atur keduanya ke <em>Ikut sumber</em> untuk hasil yang paling seimbang. Kalau
+      berkasnya masih terlalu besar, turunkan bitrate lebih dulu, karena itu pengaruh
+      yang paling langsung dan tidak mengorbankan apa pun selain ukuran.
+    </p>
+  </section>
+
+  <section class="bagian">
+    <h2>Sambungan loop terasa kasar</h2>
+    <p>
+      LofiLoop mengukur sambungannya, dan ada dua hal yang paling sering jadi penyebab.
+    </p>
+
+    <h3>Crossfade terlalu pendek</h3>
+    <p>
+      Crossfade 1 detik menghasilkan rasio sambungan 1,38 pada pengukuran. Dengan
+      crossfade 2 detik, angkanya turun ke 1,05. Kalau hasilnya terasa kasar, naikkan
+      crossfade video ke 2 detik atau lebih.
+    </p>
+
+    <h3>Memakai encoder perangkat keras</h3>
+    <p>
+      Mode <code>hardware</code> memakai h264_qsv. Pada pengukuran, sambungannya gagal
+      secara konsisten dengan rasio 1,73, karena encoder itu menaruh artefak di frame
+      pertama setiap GOP, dan artefak itu muncul persis di setiap sambungan.
+    </p>
+    <p>
+      Ganti ke <code>quality</code> (libx264). Memang lebih lambat, tetapi itulah yang
+      menghasilkan sambungan paling halus.
+    </p>
+  </section>
+
+  <section class="bagian">
+    <h2>Suara video tidak muncul di hasil</h2>
+    <p>
+      Periksa pengaturan suara video. Bawaannya adalah <em>Ganti</em>, yang berarti suara
+      video dibuang dan digantikan audio pilihanmu. Untuk mempertahankannya, pilih
+      <em>Pertahankan</em>.
+    </p>
+    <p>
+      Ada satu keadaan yang perlu kamu tahu: kalau kamu tidak memilih audio sama sekali,
+      suara video dipertahankan apa pun pengaturannya, karena tidak masuk akal
+      menghasilkan video bisu.
+    </p>
+  </section>
+
+  <section class="bagian">
+    <h2>Windows menampilkan peringatan saat memasang</h2>
+    <p>
+      Peringatan SmartScreen muncul karena berkasnya belum ditandatangani secara digital.
+      Penandatanganan sertifikat berbiaya tahunan, dan proyek ini belum memakainya.
+      Pilih <em>More info</em>, lalu <em>Run anyway</em>.
+    </p>
+    <p>
+      Kalau kamu ingin memeriksa sendiri sebelum menjalankan, seluruh kode sumbernya
+      tersedia di
+      <a href="https://github.com/samuelindra123/lofiloop">repositori GitHub</a>, dan
+      setiap rilis dibangun otomatis oleh GitHub Actions dari kode yang bisa kamu baca.
+    </p>
+  </section>
+
+  <section class="bagian">
+    <h2>Masih belum selesai</h2>
+    <p>
+      Laporkan di
+      <a href="https://github.com/samuelindra123/lofiloop/issues">halaman isu GitHub</a>.
+      Sertakan versi LofiLoop yang kamu pakai, dan salinan pesan galatnya kalau ada. Untuk
+      pesan galat, bagian paling bawah biasanya yang paling berguna, karena di situ
+      FFmpeg menyebut penyebabnya.
+    </p>
+  </section>
+</Dokumen>
+
+<style>
+  /* Pesan galat contoh ditampilkan sebagai kutipan, karena itulah bentuk aslinya
+     saat muncul di aplikasi. Membungkusnya sebagai paragraf biasa akan membuat
+     pembaca mengira itu kalimat penjelasan. */
+  .pesan-galat {
+    font-family: var(--font-angka);
+    font-size: 13px;
+    color: var(--tanah);
+    background: var(--arang-2);
+    border: 1px solid var(--garis);
+    border-left: 2px solid var(--tanah);
+    border-radius: 0 var(--r-kendali) var(--r-kendali) 0;
+    padding: var(--j3) var(--j4);
+    margin-bottom: var(--j4);
+    overflow-x: auto;
+  }
+</style>

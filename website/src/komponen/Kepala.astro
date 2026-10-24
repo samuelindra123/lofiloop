@@ -1,0 +1,120 @@
+---
+/**
+ * Kepala halaman.
+ *
+ * Bentuknya sama di seluruh halaman, termasuk tingginya. Keseragaman ini disengaja:
+ * kepala halaman adalah penanda bahwa pembaca masih di situs yang sama, dan tinggi
+ * yang berbeda-beda membuat perpindahan halaman terasa berkedip.
+ *
+ * Satu perbedaan tetap ada, dan itu disengaja: tombol unduh hanya muncul di
+ * halaman yang memang mendorong orang mengunduh, yaitu beranda. Halaman rujukan
+ * tidak perlu mengulanginya di setiap layar, karena sudah ada di bilah kaki dan di
+ * kepala beranda.
+ */
+import PilihTema from "./PilihTema.astro";
+
+const { padat = false } = Astro.props;
+---
+
+<header class="kepala">
+  <div class="kepala-isi">
+    <a class="merek" href="/">
+      <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true" fill="none">
+        <!-- Penanda: dua gelombang yang bertemu, sebagai lambang dua klip yang
+             disambung. Digambar langsung sebagai SVG, bukan diambil dari pustaka
+             ikon, supaya goresannya sesuai. -->
+        <path d="M2 11c2.5-5 5-5 7.5 0s5 5 7.5 0" stroke="var(--kuningan)" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M2 15.5c2.5-5 5-5 7.5 0s5 5 7.5 0" stroke="var(--garis-tegas)" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <span>LofiLoop</span>
+    </a>
+
+    <nav class="kepala-nav" aria-label="Navigasi utama">
+      <a href="/fitur">Fitur</a>
+      <a href="/panduan">Panduan</a>
+      <a href="/cara-kerja">Cara kerja</a>
+      <a href="/pengukuran">Pengukuran</a>
+      <a href="/developer">Developer</a>
+      <a href="/rilis">Rilis</a>
+    </nav>
+
+    <div class="kepala-alat">
+      <PilihTema />
+      {!padat && <a class="tombol tombol-utama kepala-unduh" href="/rilis">Unduh</a>}
+    </div>
+  </div>
+</header>
+
+<style>
+  .kepala {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--arang);
+    border-bottom: 1px solid var(--garis);
+  }
+
+  .kepala-isi {
+    display: flex;
+    align-items: center;
+    gap: var(--j5);
+    max-width: var(--lebar-situs);
+    margin: 0 auto;
+    padding: var(--j3) var(--j5);
+    min-height: 56px;
+  }
+
+  .merek {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--j2);
+    font-family: var(--font-judul);
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    color: var(--tulang);
+    flex: none;
+  }
+
+  .kepala-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--j5);
+    margin-left: var(--j5);
+  }
+
+  .kepala-nav a {
+    font-size: 14px;
+    color: var(--tulang-redup);
+    text-decoration: none;
+    padding: var(--j2) 0;
+    transition: color var(--dur) var(--ease);
+  }
+
+  .kepala-nav a:hover {
+    color: var(--tulang);
+  }
+
+  .kepala-alat {
+    display: flex;
+    align-items: center;
+    gap: var(--j3);
+    margin-left: auto;
+  }
+
+  .kepala-unduh {
+    min-height: 36px;
+    padding: 0 var(--j4);
+    font-size: 14px;
+  }
+
+  /* Di bawah 900px tautan di kepala disembunyikan, karena bilah samping di
+     halaman dokumen sudah memuat daftar yang sama dengan lebih lengkap. Merek dan
+     tombol tema tetap ada, sehingga navigasi tidak pernah benar-benar hilang. */
+  @media (max-width: 900px) {
+    .kepala-nav {
+      display: none;
+    }
+  }
+</style>

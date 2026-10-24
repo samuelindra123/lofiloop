@@ -1,0 +1,121 @@
+---
+/**
+ * Kerangka halaman rujukan: bilah samping di kiri, isi di kanan.
+ *
+ * Dipakai hanya oleh halaman yang sifatnya rujukan, yaitu halaman yang orang
+ * buka untuk mencari jawaban atau memeriksa sesuatu: panduan, baris perintah,
+ * cara kerja, pengukuran, pembanding, pemecahan masalah, fitur, dan developer.
+ *
+ * Beranda tidak memakai kerangka ini. Ia memakai KerangkaBeranda, karena beranda
+ * adalah halaman perkenalan, bukan halaman rujukan. Bentuk keduanya memang harus
+ * berbeda, dan pemisahan itu disengaja supaya tidak ada satu halaman pun yang
+ * dipaksa memakai bentuk yang tidak sesuai isinya.
+ *
+ * Halaman ringkas seperti rilis, tentang, dan lisensi juga tidak memakainya,
+ * karena isinya bukan rujukan berstruktur dan tidak butuh bilah samping.
+ */
+import "../gaya/global.css";
+import "../gaya/dokumen.css";
+import PilihTema from "../komponen/PilihTema.astro";
+import BilahSamping from "../komponen/BilahSamping.astro";
+import Kepala from "../komponen/Kepala.astro";
+import Kaki from "../komponen/Kaki.astro";
+import BilahTab from "../komponen/BilahTab.astro";
+
+const {
+  judul,
+  keterangan = "",
+  aktif = "",
+  lebar = "sempit",
+} = Astro.props;
+
+const kanonik = new URL(Astro.url.pathname, Astro.site ?? "https://lofiloop.vercel.app");
+---
+
+<!doctype html>
+<html lang="id" data-tema="gelap">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{judul} · LofiLoop</title>
+    {keterangan && <meta name="description" content={keterangan} />}
+    <link rel="canonical" href={kanonik.href} />
+    <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+    <meta name="color-scheme" content="dark light" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={`${judul} · LofiLoop`} />
+    {keterangan && <meta property="og:description" content={keterangan} />}
+    <meta property="og:url" content={kanonik.href} />
+
+    <!--
+      Tema dipasang sebelum halaman digambar, supaya tidak ada kedipan putih saat
+      pengguna memilih tema gelap. Skrip ini kecil dan berjalan sebaris, karena
+      memuatnya dari berkas terpisah justru memunculkan kedipan yang ingin dihindari.
+    -->
+    <script is:inline>
+      (() => {
+        try {
+          const tersimpan = localStorage.getItem("lofiloop-tema");
+          if (tersimpan === "terang" || tersimpan === "gelap") {
+            document.documentElement.dataset.tema = tersimpan;
+          } else if (window.matchMedia("(prefers-color-scheme: light)").matches) {
+            document.documentElement.dataset.tema = "terang";
+          }
+        } catch {
+          // localStorage bisa diblokir. Kalau begitu, tema gelap dipakai apa adanya.
+        }
+      })();
+    </script>
+  </head>
+
+  <body>
+    <a class="lewati" href="#isi">Lewati ke isi</a>
+
+    <Kepala />
+    <BilahTab aktif={aktif} />
+
+    <div class="tata-letak">
+      <BilahSamping aktif={aktif} />
+      <main id="isi" class={lebar === "lebar" ? "isi isi-lebar" : "isi"}>
+        <slot />
+      </main>
+    </div>
+
+    <Kaki />
+  </body>
+</html>
+
+<style>
+  .tata-letak {
+    display: grid;
+    grid-template-columns: 244px minmax(0, 1fr);
+    max-width: var(--lebar-situs);
+    margin: 0 auto;
+    padding: 0 var(--j5);
+    gap: var(--j7);
+    align-items: start;
+  }
+
+  .isi {
+    min-width: 0;
+    padding: var(--j7) 0 var(--j9);
+  }
+
+  .isi-lebar {
+    max-width: none;
+  }
+
+  /* Di bawah 900px bilah samping hilang dan isi mendapat lebar penuh. Bilah tab
+     tetap ada, jadi pembaca tidak kehilangan cara berpindah halaman. */
+  @media (max-width: 900px) {
+    .tata-letak {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+    }
+
+    .isi {
+      padding-top: var(--j6);
+    }
+  }
+</style>

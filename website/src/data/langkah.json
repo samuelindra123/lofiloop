@@ -1,0 +1,82 @@
+{
+  "catatan": [
+    "Tiap langkah adalah satu tangkapan layar dari rekaman demo itu sendiri.",
+    "Gambar diambil pada saat jendelanya diam, bukan saat bergerak, supaya keadaannya dikenali.",
+    "Gambar ditampilkan tanpa pemangkasan: bilah judul dan lambang aplikasi tetap terlihat.",
+    "Kolom waktu menyebut detiknya di dalam rekaman, supaya pembaca bisa mencocokkannya sendiri.",
+    "Skrip pengambil gambar membaca kolom waktu ini, jadi gambarnya tidak bisa menyimpang dari keterangannya.",
+    "Urutan waktunya tidak menaik terus: fungsi gabung audio dikerjakan lebih dulu di dalam rekaman, jadi dua langkah terakhir justru berwaktu lebih awal daripada langkah sebelumnya."
+  ],
+  "langkah": [
+    {
+      "judul": "Pilih klip video",
+      "isi": "Klip video ditaruh di kolom Sumber, bisa lewat tombol pilih berkas atau dengan menyeretnya. Begitu masuk, durasi, resolusi, dan frame per detiknya langsung tampil di bawah namanya, plus keterangan apakah suaranya benar-benar ada.",
+      "gambar": "/gambar/langkah-1.jpg",
+      "alt": "Jendela LofiLoop dengan kolom Sumber masih kosong, video dan audio belum dipilih.",
+      "waktu": "0:17"
+    },
+    {
+      "judul": "Pilih audio latar",
+      "isi": "Audio bersifat opsional dan ditaruh tepat di bawah klip video. Kalau diisi, volumenya disamakan otomatis ke -14 LUFS supaya tidak menonjol, dan suara asli videonya bisa dimatikan, dicampur, atau dipertahankan.",
+      "gambar": "/gambar/langkah-2.jpg",
+      "alt": "Kolom Sumber berisi satu klip video 1280x720 dan satu berkas audio m4a, keduanya sudah terisi.",
+      "waktu": "1:44"
+    },
+    {
+      "judul": "Tentukan durasi hasil",
+      "isi": "Panjang hasilnya dipilih dari 1 menit sampai 6 jam, dan perkiraan ukuran berkasnya muncul sebelum tombol render ditekan. Titik di dalam klip yang dipakai untuk menyambung juga diatur di sini.",
+      "gambar": "/gambar/langkah-3.jpg",
+      "alt": "Pilihan durasi 1 jam, 3 jam, dan 6 jam beserta perkiraan ukuran berkasnya.",
+      "waktu": "1:52"
+    },
+    {
+      "judul": "Sesuaikan bentuk keluaran",
+      "isi": "Seluruh penyetelan hasil duduk di satu kolom, dan nilai bawaannya sudah masuk akal sehingga biasanya tidak perlu diubah. Yang tersedia di antaranya resolusi, frame per detik, bitrate, encoder, panjang loop, crossfade, dan fade-out audio di akhir.",
+      "gambar": "/gambar/langkah-4.jpg",
+      "alt": "Kolom Hasil dengan pilihan resolusi, frame per detik, bitrate, dan encoder.",
+      "waktu": "1:54"
+    },
+    {
+      "judul": "Tentukan nama dan tempat berkas",
+      "isi": "Sebelum render dimulai, nama berkas dan folder tujuannya ditentukan lewat dialog simpan bawaan Windows. Berkasnya ditulis ke tempat itu, jadi hasilnya tidak perlu dicari setelah selesai.",
+      "gambar": "/gambar/langkah-5.jpg",
+      "alt": "Dialog simpan Windows dengan nama berkas hasil render.",
+      "waktu": "2:02"
+    },
+    {
+      "judul": "Jalankan render",
+      "isi": "Prosesnya berjalan dengan penghitung waktu dan perkiraan sisa yang dihitung dari berkasnya sendiri. Kalau prosesnya tersendat, itu langsung terlihat, bukan menunggu tanpa keterangan.",
+      "gambar": "/gambar/langkah-6.jpg",
+      "alt": "LofiLoop menjalankan render dengan bilah kemajuan, penghitung waktu, dan perkiraan sisa.",
+      "waktu": "2:30"
+    },
+    {
+      "judul": "Tunggu sampai selesai",
+      "isi": "Tidak ada proses lain yang perlu dijalankan bersamaan. Encode ulang terjadi sekali saja, lalu putarannya disusun sebagai salinan paket, jadi durasi hasil tidak menambah lama pengerjaan.",
+      "gambar": "/gambar/langkah-7.jpg",
+      "alt": "Render berjalan lebih jauh dengan kemajuan yang bertambah.",
+      "waktu": "2:52"
+    },
+    {
+      "judul": "Hasilnya siap",
+      "isi": "Begitu selesai, ringkasannya menampilkan berkas yang dihasilkan beserta ukurannya, durasi video dan audio, selisih keduanya, bentuk keluaran, dan waktu proses.",
+      "gambar": "/gambar/langkah-8.jpg",
+      "alt": "Ringkasan hasil render dengan nama berkas, ukuran, durasi, dan waktu proses.",
+      "waktu": "3:19"
+    },
+    {
+      "judul": "Gabung banyak lagu",
+      "isi": "Fungsi kedua menggabungkan berapa pun jumlah lagu menjadi satu berkas dengan transisi equal-power antar lagu. Urutannya bisa digeser, dan volume antar lagu disamakan otomatis.",
+      "gambar": "/gambar/langkah-9.jpg",
+      "alt": "Panel gabung audio dengan dua lagu siap digabung dan pengaturan transisinya.",
+      "waktu": "0:36"
+    },
+    {
+      "judul": "Hasil gabungan siap",
+      "isi": "Sama seperti fungsi pertama, ringkasannya menampilkan nama berkas, jumlah lagu, panjang, ukuran, dan waktu prosesnya. Penyetelan yang sama juga tersedia lewat versi baris perintah untuk memproses banyak berkas sekaligus.",
+      "gambar": "/gambar/langkah-10.jpg",
+      "alt": "Ringkasan hasil gabung audio dengan satu berkas berisi seluruh lagu.",
+      "waktu": "1:11"
+    }
+  ]
+}

@@ -13,3 +13,11 @@ PLAN.md
 
 # Konfigurasi editor lokal.
 .claude/
+
+# Hasil build situs: dibuat ulang oleh `pnpm build`, tidak disimpan di repositori.
+website/dist/
+website/.astro/
+
+# Rekaman layar mentah. Yang dipakai situs adalah versi kecil di
+# website/public/video/, dan rekaman mentahnya bisa dibuat ulang kapan saja.
+rekaman-asli/

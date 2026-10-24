@@ -1,0 +1,369 @@
+---
+import Dokumen from "../layouts/Dokumen.astro";
+import versi from "../data/versi.json";
+
+/**
+ * Riwayat rilis.
+ *
+ * Seluruh isinya dibaca dari src/data/versi.json, yang disusun skrip/ambil-versi.mjs
+ * dari CHANGELOG.md dan API rilis GitHub. Halaman ini karena itu tidak perlu
+ * diperbarui manual setiap kali ada rilis baru: cukup changelog yang diisi, lalu
+ * skripnya dijalankan.
+ */
+
+const terbaru = versi.versi[0];
+const sebelumnya = versi.versi.slice(1);
+
+function ukuranMB(bytes: number) {
+  if (!bytes) return null;
+  return `${(bytes / 1_000_000).toFixed(1)} MB`;
+}
+
+// Pisahkan nama berkas menjadi keterangan yang bisa dibaca.
+function jenisBerkas(nama: string) {
+  if (nama.includes("Setup")) return "Pemasang";
+  if (nama.includes("portable")) return "Portabel";
+  return "Berkas";
+}
+
+function tanggalPanjang(iso: string) {
+  const bulan = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+  ];
+  const [t, b, h] = iso.split("-").map(Number);
+  return `${h} ${bulan[b - 1]} ${t}`;
+}
+
+const adaTautan = terbaru.berkas.length > 0;
+---
+
+<Dokumen
+  judul="Riwayat rilis"
+  keterangan="Setiap versi LofiLoop, isi perubahannya, dan berkas yang bisa diunduh."
+  aktif="/rilis"
+>
+  <div class="judul-halaman">
+    <h1>Riwayat rilis</h1>
+    <p class="pembuka">
+      Setiap perubahan penting dicatat. Versi {terbaru.versi} terbit
+      {tanggalPanjang(terbaru.tanggal)} dan merupakan yang terbaru.
+    </p>
+  </div>
+
+  <!-- Versi terbaru diberi tempat tersendiri, karena inilah yang dicari hampir
+       semua orang yang membuka halaman ini. -->
+  <section class="bagian">
+    <div class="terbaru">
+      <div class="terbaru-kepala">
+        <div>
+          <div class="terbaru-versi">
+            Versi {terbaru.versi}
+            <span class="terbaru-tanda">terbaru</span>
+          </div>
+          <div class="terbaru-tanggal">{tanggalPanjang(terbaru.tanggal)}</div>
+        </div>
+        <a class="tombol" href={terbaru.tautan_rilis}>Halaman rilis di GitHub</a>
+      </div>
+
+      {adaTautan ? (
+        <div class="berkas">
+          {terbaru.berkas.map((b) => (
+            <a class="berkas-satu" href={b.tautan}>
+              <span class="berkas-jenis">{jenisBerkas(b.nama)}</span>
+              <span class="berkas-nama">{b.nama}</span>
+              <span class="berkas-ukuran">{ukuranMB(b.ukuran)}</span>
+            </a>
+          ))}
+        </div>
+      ) : (
+        /* Keadaan kosong yang menyebut sebabnya dan langkah berikutnya, bukan
+           sekadar "tidak ada data". */
+        <div class="keterangan">
+          <strong>Tautan unduhan belum tersedia di halaman ini.</strong>
+          Ini terjadi kalau data rilis tidak sempat diambil saat situs dibangun,
+          biasanya karena tidak ada koneksi ke GitHub. Berkasnya tetap ada dan bisa
+          diambil dari <a href={terbaru.tautan_rilis}>halaman rilis di GitHub</a>.
+        </div>
+      )}
+
+      <div class="catatan">
+        <strong>Memasang:</strong> unduh berkas pemasang lalu jalankan. Versi portabel cukup
+        diekstrak dan dijalankan tanpa pemasangan. Langkah lengkapnya ada di
+        <a href="/panduan">panduan pemakaian</a>.
+      </div>
+    </div>
+  </section>
+
+  {terbaru.bagian.length > 0 && (
+    <section class="bagian">
+      <h2>Yang berubah di {terbaru.versi}</h2>
+      {terbaru.bagian.map((bagian) => (
+        <div class="kelompok-perubahan">
+          <h3>{bagian.nama}</h3>
+          <ul>
+            {bagian.isi.map((butir) => (
+              <li set:html={butir.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")} />
+            ))}
+          </ul>
+        </div>
+      ))}
+    </section>
+  )}
+
+  <section class="bagian">
+    <h2>Versi sebelumnya</h2>
+    <p class="prosa">
+      {sebelumnya.length} versi sebelum ini. Setiap versinya bisa dibuka untuk melihat
+      isi perubahannya.
+    </p>
+
+    <div class="daftar-rilis">
+      {sebelumnya.map((v) => (
+        <details class="rilis-lama">
+          <summary>
+            <span class="rilis-versi">{v.versi}</span>
+            <span class="rilis-tanggal">{tanggalPanjang(v.tanggal)}</span>
+            <span class="rilis-jumlah">
+              {v.bagian.reduce((n, b) => n + b.isi.length, 0)} perubahan
+            </span>
+          </summary>
+
+          <div class="rilis-isi">
+            {v.bagian.map((bagian) => (
+              <div class="kelompok-perubahan">
+                <h4>{bagian.nama}</h4>
+                <ul>
+                  {bagian.isi.map((butir) => (
+                    <li set:html={butir.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")} />
+                  ))}
+                </ul>
+              </div>
+            ))}
+
+            {v.berkas.length > 0 && (
+              <div class="rilis-berkas">
+                {v.berkas.map((b) => (
+                  <a href={b.tautan}>
+                    {jenisBerkas(b.nama)} {ukuranMB(b.ukuran)}
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+        </details>
+      ))}
+    </div>
+
+    <p class="catatan-kecil">
+      Data versi disusun dari <code>CHANGELOG.md</code> di repositori, ditambah keterangan
+      berkas dari API GitHub. Versi lengkapnya juga tersedia di
+      <a href="https://github.com/samuelindra123/lofiloop/blob/main/CHANGELOG.md">changelog di GitHub</a>.
+    </p>
+  </section>
+</Dokumen>
+
+<style>
+  .terbaru {
+    border: 1px solid var(--garis-tegas);
+    border-radius: var(--r-panel);
+    padding: var(--j5);
+    background: var(--arang-2);
+  }
+
+  .terbaru-kepala {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--j4);
+    flex-wrap: wrap;
+    margin-bottom: var(--j5);
+  }
+
+  .terbaru-versi {
+    display: flex;
+    align-items: center;
+    gap: var(--j3);
+    font-family: var(--font-judul);
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  /* Tanda "terbaru" memakai bentuk persegi kecil, bukan pil, mengikuti bahasa
+     bentuk yang sudah ditetapkan di DESIGN.md. */
+  .terbaru-tanda {
+    font-family: var(--font-isi);
+    font-size: 11.5px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: var(--r-tanda);
+    background: var(--kuningan);
+    color: var(--di-atas-aksen);
+  }
+
+  .terbaru-tanggal {
+    font-size: 13.5px;
+    color: var(--tulang-samar);
+    margin-top: 2px;
+  }
+
+  .berkas {
+    display: flex;
+    flex-direction: column;
+    gap: var(--j2);
+  }
+
+  .berkas-satu {
+    display: flex;
+    align-items: baseline;
+    gap: var(--j3);
+    padding: var(--j3) var(--j4);
+    border: 1px solid var(--garis);
+    border-radius: var(--r-kendali);
+    background: var(--arang);
+    text-decoration: none;
+    transition: border-color var(--dur) var(--ease);
+  }
+
+  .berkas-satu:hover {
+    border-color: var(--kuningan);
+  }
+
+  .berkas-jenis {
+    flex: none;
+    width: 68px;
+    font-size: 12.5px;
+    color: var(--tulang-samar);
+  }
+
+  .berkas-nama {
+    font-family: var(--font-angka);
+    font-size: 13px;
+    color: var(--tulang);
+    word-break: break-all;
+  }
+
+  .berkas-ukuran {
+    margin-left: auto;
+    flex: none;
+    font-family: var(--font-angka);
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+    color: var(--tulang-redup);
+  }
+
+  .catatan {
+    margin-top: var(--j5);
+    padding-top: var(--j4);
+    border-top: 1px solid var(--garis);
+    font-size: 13.5px;
+    color: var(--tulang-samar);
+  }
+
+  .kelompok-perubahan {
+    margin-bottom: var(--j5);
+  }
+
+  .kelompok-perubahan h3,
+  .kelompok-perubahan h4 {
+    font-size: 14px;
+    font-family: var(--font-isi);
+    font-weight: 600;
+    color: var(--tulang);
+    margin-bottom: var(--j2);
+  }
+
+  .kelompok-perubahan ul {
+    margin: 0;
+    padding-left: var(--j5);
+    color: var(--tulang-redup);
+    font-size: 14px;
+  }
+
+  .kelompok-perubahan li {
+    margin-bottom: var(--j2);
+  }
+
+  .kelompok-perubahan strong {
+    color: var(--tulang);
+  }
+
+  /* Versi lama dilipat, supaya halaman ini tidak memaksa pembaca melewati
+     riwayat panjang hanya untuk menemukan versi terbaru. */
+  .daftar-rilis {
+    border-top: 1px solid var(--garis);
+  }
+
+  .rilis-lama {
+    border-bottom: 1px solid var(--garis);
+  }
+
+  .rilis-lama > summary {
+    display: flex;
+    align-items: baseline;
+    gap: var(--j4);
+    padding: var(--j3) 0;
+    cursor: pointer;
+    list-style: none;
+    min-height: 44px;
+  }
+
+  .rilis-lama > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .rilis-lama > summary::before {
+    content: "▸";
+    color: var(--tulang-samar);
+    flex: none;
+  }
+
+  .rilis-lama[open] > summary::before {
+    content: "▾";
+  }
+
+  .rilis-versi {
+    font-family: var(--font-angka);
+    font-size: 14px;
+    color: var(--tulang);
+    min-width: 56px;
+  }
+
+  .rilis-tanggal {
+    font-size: 13.5px;
+    color: var(--tulang-samar);
+  }
+
+  .rilis-jumlah {
+    margin-left: auto;
+    font-size: 12.5px;
+    color: var(--tulang-samar);
+  }
+
+  .rilis-isi {
+    padding: 0 0 var(--j5) var(--j5);
+  }
+
+  .rilis-berkas {
+    display: flex;
+    gap: var(--j4);
+    flex-wrap: wrap;
+    font-size: 13px;
+  }
+
+  .catatan-kecil {
+    font-size: 13.5px;
+    color: var(--tulang-samar);
+    margin-top: var(--j5);
+  }
+
+  @media (max-width: 640px) {
+    .berkas-jenis {
+      display: none;
+    }
+
+    .rilis-jumlah {
+      display: none;
+    }
+  }
+</style>

@@ -1,0 +1,154 @@
+/* ============================================================================
+   Gaya khusus halaman dokumen: judul halaman, daftar isi, bagian, dan tabel.
+   Terpisah dari global.css supaya berkas itu tetap murni berisi token dan
+   kendali dasar.
+   ========================================================================= */
+
+/* ---------- Judul halaman ---------- */
+
+.judul-halaman {
+  max-width: var(--lebar-isi);
+  margin-bottom: var(--j7);
+}
+
+.judul-halaman h1 {
+  margin-bottom: var(--j3);
+}
+
+/* Keterangan pembuka di bawah judul. Tidak memakai bentuk pil atau lencana di
+   atas judul, karena itu pola templat yang hanya mengulang isi judulnya. */
+.judul-halaman .pembuka {
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--tulang-redup);
+  margin: 0;
+  max-width: 56ch;
+}
+
+/* ---------- Bagian ---------- */
+
+.bagian {
+  margin-top: var(--j8);
+  max-width: var(--lebar-isi);
+}
+
+/* Bagian yang memuat tangkapan layar, tabel lebar, atau daftar angka boleh
+   memakai lebar penuh. Ini yang membuat irama halaman bervariasi, bukan
+   seragam dari atas ke bawah. */
+.bagian-lebar {
+  max-width: none;
+}
+
+.bagian h2 {
+  margin-bottom: var(--j4);
+  padding-bottom: var(--j3);
+  border-bottom: 1px solid var(--garis);
+}
+
+.bagian h3 {
+  margin: var(--j6) 0 var(--j3);
+}
+
+.bagian h2 + h3,
+.bagian h2 + p {
+  margin-top: 0;
+}
+
+/* ---------- Langkah bernomor ----------
+   Dipakai hanya kalau langkahnya memang berurutan. Jumlahnya mengikuti isi,
+   bukan dipaksa tiga. */
+
+.langkah {
+  counter-reset: langkah;
+  list-style: none;
+  margin: 0 0 var(--j5);
+  padding: 0;
+}
+
+.langkah > li {
+  counter-increment: langkah;
+  position: relative;
+  padding-left: var(--j7);
+  padding-bottom: var(--j5);
+}
+
+/* Garis penghubung antar langkah, berhenti di langkah terakhir. */
+.langkah > li:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 30px;
+  bottom: 0;
+  width: 1px;
+  background: var(--garis);
+}
+
+.langkah > li::after {
+  content: counter(langkah);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  background: var(--arang-2);
+  border: 1px solid var(--garis-tegas);
+  border-radius: var(--r-tanda);
+  font-family: var(--font-angka);
+  font-size: 12.5px;
+  color: var(--tulang-redup);
+}
+
+.langkah > li > strong {
+  display: block;
+  margin-bottom: var(--j1);
+  font-weight: 600;
+  color: var(--tulang);
+}
+
+.langkah p {
+  margin-bottom: var(--j3);
+  color: var(--tulang-redup);
+  font-size: 14.5px;
+}
+
+/* ---------- Daftar butir biasa ---------- */
+
+.bagian ul:not(.langkah),
+.bagian ol:not(.langkah) {
+  margin: 0 0 var(--j5);
+  padding-left: var(--j5);
+  color: var(--tulang-redup);
+}
+
+.bagian li {
+  margin-bottom: var(--j2);
+}
+
+.bagian li strong {
+  color: var(--tulang);
+}
+
+/* ---------- Tautan lanjut ---------- */
+
+/* Dipakai di akhir halaman untuk menunjuk halaman berikutnya. Satu tautan saja,
+   bukan kumpulan kartu. */
+.lanjut {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--j2);
+  margin-top: var(--j4);
+  font-size: 14.5px;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--tulang);
+}
+
+.lanjut:hover {
+  color: var(--kuningan);
+}
+
+.lanjut .arah {
+  color: var(--kuningan);
+}

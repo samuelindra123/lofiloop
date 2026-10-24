@@ -1,0 +1,176 @@
+---
+import Dokumen from "../layouts/Dokumen.astro";
+import versi from "../data/versi.json";
+
+/**
+ * Tentang.
+ *
+ * Halaman ini sengaja tidak memuat bagian "dipercaya oleh", kutipan pengguna, atau
+ * angka pemakaian. Proyek ini tidak punya data seperti itu, dan mengarangnya justru
+ * akan merusak kepercayaan yang halaman ini coba bangun.
+ *
+ * Yang ditampilkan hanya hal yang bisa diperiksa: siapa yang mengerjakan, apa yang
+ * sudah jadi, apa yang belum, dan ke mana harus mengadu.
+ */
+const terbaru = versi.versi[0];
+const jumlahRilis = versi.versi.length;
+---
+
+<Dokumen
+  judul="Tentang"
+  keterangan="Siapa yang membuat LofiLoop, keadaannya sekarang, dan apa yang belum ada."
+  aktif="/tentang"
+>
+  <div class="judul-halaman">
+    <h1>Tentang</h1>
+    <p class="pembuka">
+      LofiLoop dibuat untuk satu masalah kecil: mengubah klip pendek jadi video lofi
+      panjang tanpa menunggu berjam-jam, pada laptop yang tidak bertenaga besar.
+    </p>
+  </div>
+
+  <section class="bagian">
+    <h2>Keadaannya sekarang</h2>
+    <p>
+      LofiLoop sudah dipakai, sudah punya {jumlahRilis} rilis, dan versi terbarunya
+      {terbaru.versi}. Kodenya terbuka di
+      <a href="https://github.com/samuelindra123/lofiloop">GitHub</a> dengan lisensi MIT.
+    </p>
+    <p>
+      Proyek ini dikerjakan satu orang, jadi tidak ada tim dukungan dan tidak ada janji
+      waktu tanggap. Laporan isu tetap dibaca dan dibalas sebaik mungkin.
+    </p>
+
+    <dl class="daftar-angka">
+      <div>
+        <dt>Versi terbaru</dt>
+        <dd>{terbaru.versi}</dd>
+      </div>
+      <div>
+        <dt>Tanggal rilis terakhir</dt>
+        <dd>{terbaru.tanggal}</dd>
+      </div>
+      <div>
+        <dt>Jumlah rilis</dt>
+        <dd>{jumlahRilis}</dd>
+      </div>
+      <div>
+        <dt>Lisensi</dt>
+        <dd>MIT</dd>
+      </div>
+      <div>
+        <dt>Platform</dt>
+        <dd>Windows 10, 11</dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="bagian">
+    <h2>Yang sudah dibuktikan, dan yang belum</h2>
+    <p>
+      Ini bagian yang biasanya dihilangkan dari halaman tentang, dan justru itu alasan
+      halaman ini memuatnya.
+    </p>
+
+    <h3>Sudah dibuktikan</h3>
+    <ul>
+      <li>
+        Sambungan loop tidak menimbulkan lompatan, diukur dengan rasio 1,10 pada batas
+        kelulusan 1,5.
+      </li>
+      <li>
+        Sambungan audio tidak menimbulkan bunyi klik, diukur pada dua titik berbeda
+        sepanjang berkas 1 jam.
+      </li>
+      <li>
+        Berkas hasil 1 jam bisa didekode ulang seluruhnya tanpa satu galat pun.
+      </li>
+      <li>
+        Selisih panjang audio dan video 0,058 detik, sekitar 1,5 frame.
+      </li>
+    </ul>
+
+    <h3>Belum dibuktikan</h3>
+    <ul>
+      <li>
+        <strong>Penilaian mata dan telinga manusia.</strong> Metrik membuktikan tidak ada
+        klik dan tidak ada lompatan, tetapi tidak bisa membuktikan hasilnya enak ditonton.
+        Itu penilaianmu.
+      </li>
+      <li>
+        <strong>Perilaku di luar mesin uji.</strong> Seluruh angka diukur pada satu laptop
+        kelas bawah. Mesin lain bisa berbeda, terutama pada encoder perangkat keras.
+      </li>
+      <li>
+        <strong>Ketahanan pada berkas yang tidak lazim.</strong> Pengujian memakai berkas
+        yang bentuknya normal. Video dengan frame per detik berubah-ubah atau berkas yang
+        rusak sebagian belum diuji menyeluruh.
+      </li>
+    </ul>
+  </section>
+
+  <section class="bagian">
+    <h2>Yang belum ada</h2>
+    <p>
+      Supaya kamu tidak menunggu sesuatu yang tidak sedang dikerjakan:
+    </p>
+    <ul>
+      <li>Versi macOS dan Linux. Untuk sekarang hanya Windows.</li>
+      <li>Penyuntingan klip di dalam aplikasi: memotong, memangkas, menambah teks.</li>
+      <li>Unggahan otomatis ke layanan pemutaran.</li>
+      <li>Antarmuka baris perintah untuk sistem lain selain Windows.</li>
+      <li>Situs ini belum punya pencarian. Kalau kamu merasa membutuhkannya, kabari.</li>
+    </ul>
+  </section>
+
+  <section class="bagian">
+    <h2>Teknologi yang dipakai</h2>
+    <p>
+      Pemrosesan videonya diserahkan seluruhnya ke FFmpeg. Yang dikerjakan LofiLoop
+      adalah menyusun perintah yang benar dan mengaturnya, bukan menulis ulang pemroses
+      video dari nol.
+    </p>
+    <div class="tabel-bungkus">
+      <table>
+        <thead>
+          <tr>
+            <th>Bagian</th>
+            <th>Yang dipakai</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Mesin pemrosesan</td>
+            <td>Rust</td>
+          </tr>
+          <tr>
+            <td>Aplikasi desktop</td>
+            <td>Tauri 2, antarmuka Svelte 5</td>
+          </tr>
+          <tr>
+            <td>Pemrosesan media</td>
+            <td>FFmpeg dan ffprobe</td>
+          </tr>
+          <tr>
+            <td>Situs dokumentasi ini</td>
+            <td>Astro, Svelte, Tailwind</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="bagian">
+    <h2>Menghubungi</h2>
+    <p>
+      Cara tercepat adalah lewat
+      <a href="https://github.com/samuelindra123/lofiloop/issues">halaman isu di GitHub</a>.
+      Isu di sana bisa dilihat orang lain juga, sehingga jawabannya berguna untuk lebih
+      dari satu orang.
+    </p>
+    <p>
+      Sebelum melapor, cek dulu <a href="/pemecahan-masalah">halaman pemecahan masalah</a>,
+      karena beberapa pertanyaan yang paling sering muncul sudah dijawab di sana.
+    </p>
+  </section>
+</Dokumen>

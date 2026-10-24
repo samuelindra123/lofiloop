@@ -1,0 +1,155 @@
+---
+/**
+ * Langkah pemakaian bergambar.
+ *
+ * Tiap langkah adalah satu tangkapan layar dari rekaman itu sendiri, bukan gambar
+ * buatan dan bukan animasi. Gambar diambil pada saat jendelanya diam, supaya yang
+ * terlihat benar-benar satu keadaan yang bisa dikenali, bukan gerakan yang kabur.
+ *
+ * Sepuluh langkahnya dibagi dua kolom, bukan satu deret panjang: delapan langkah
+ * pertama adalah fungsi loop video, dua sisanya fungsi gabung audio. Dua kolom
+ * menyatakan pembagian itu tanpa perlu judul tambahan.
+ *
+ * Gambar ditampilkan pada rasio aslinya tanpa pemangkasan, supaya bilah judul dan
+ * lambang aplikasinya tetap terlihat di setiap langkah.
+ */
+import data from "../data/langkah.json";
+---
+
+<section class="langkah" aria-labelledby="judul-langkah">
+  <h2 id="judul-langkah" class="langkah-judul">Alurnya, diambil dari rekaman itu sendiri</h2>
+  <p class="langkah-pengantar">
+    Sepuluh tangkapan layar berikut diambil dari rekaman di atas, masing-masing pada
+    saat langkahnya sedang dikerjakan. Tidak ada yang digambar ulang.
+  </p>
+
+  <ol class="langkah-deret">
+    {data.langkah.map((l, i) => (
+      <li class="langkah-butir">
+        <figure>
+          <img
+            class="langkah-gambar"
+            src={l.gambar}
+            width="1000"
+            height="562"
+            loading="lazy"
+            decoding="async"
+            alt={l.alt}
+          />
+          <figcaption>
+            <span class="langkah-nomor">{String(i + 1).padStart(2, "0")}</span>
+            <span class="langkah-isi">
+              <strong>{l.judul}</strong>
+              <span class="langkah-teks">{l.isi}</span>
+              {l.waktu ? <span class="langkah-waktu">pada {l.waktu} rekaman</span> : null}
+            </span>
+          </figcaption>
+        </figure>
+      </li>
+    ))}
+  </ol>
+</section>
+
+<style>
+  .langkah-judul {
+    font-size: 1.5rem;
+    margin: 0 0 var(--j3);
+  }
+
+  .langkah-pengantar {
+    margin: 0 0 var(--j6);
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--tulang-redup);
+    max-width: 68ch;
+  }
+
+  /* Dua kolom sejak lebar sedang. Satu kolom di layar sempit, karena gambar
+     berisi antarmuka aplikasi dan mengecilkannya membuat tulisannya tak terbaca. */
+  .langkah-deret {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--j6) var(--j5);
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 760px) {
+    .langkah-deret {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* Langkah bernomor ganjil berdiri di kolom kiri dan yang genap di kanan, jadi
+       hitungannya terbaca menurun pada tiap kolom. */
+    .langkah-butir:nth-child(odd) {
+      grid-column: 1;
+    }
+
+    .langkah-butir:nth-child(even) {
+      grid-column: 2;
+    }
+  }
+
+  .langkah-butir figure {
+    margin: 0;
+  }
+
+  /* Gambar diberi garis tipis, bukan bayangan, supaya tepinya jelas tanpa menambah
+     lapisan dekorasi yang tidak menyatakan apa pun. */
+  .langkah-gambar {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--garis-tegas);
+    border-radius: var(--r-panel);
+    background: var(--kode-latar);
+  }
+
+  .langkah-butir figcaption {
+    display: flex;
+    align-items: baseline;
+    gap: var(--j3);
+    margin-top: var(--j3);
+  }
+
+  .langkah-nomor {
+    flex: none;
+    font-family: var(--font-angka);
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--tulang-samar);
+  }
+
+  .langkah-isi {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .langkah-isi strong {
+    display: block;
+    font-family: var(--font-isi);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--tulang);
+  }
+
+  .langkah-teks {
+    display: block;
+    margin-top: 2px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--tulang-redup);
+  }
+
+  /* Penunjuk waktu memakai monospace dan duduk di barisnya sendiri, karena ia
+     keterangan tentang gambar, bukan bagian dari kalimatnya. */
+  .langkah-waktu {
+    display: block;
+    margin-top: var(--j2);
+    font-family: var(--font-angka);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: var(--tulang-samar);
+  }
+</style>
